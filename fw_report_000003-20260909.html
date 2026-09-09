@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PA Firewall Rule Recommendations — 7days_TCP-FIN.csv</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0f1a;color:#c8d8e8;min-height:100vh;display:flex;flex-direction:column}
+/* Nav */
+#nav{background:#0d1526;border-bottom:2px solid #1a2a3a;padding:0 14px;display:flex;align-items:center;gap:2px;flex-shrink:0;position:sticky;top:0;z-index:100}
+#nav h1{font-size:13px;font-weight:700;color:#e8f0f8;padding:10px 14px 10px 0;border-right:1px solid #1a3a5a;margin-right:8px;white-space:nowrap}
+.nb{background:none;border:none;color:#6888a8;font-size:11px;padding:10px 10px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s}
+.nb:hover{color:#c8d8e8}.nb.active{color:#4ab8f8;border-bottom-color:#4ab8f8}
+/* Stats */
+#statsbar{background:#08101c;border-bottom:1px solid #1a2a3a;padding:5px 14px;display:flex;gap:0;flex-shrink:0;flex-wrap:wrap}
+.stat{text-align:center;padding:4px 14px;border-right:1px solid #1a2a3a}.stat:last-child{border-right:none}
+.stat-val{font-size:17px;font-weight:700}.stat-lbl{font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.sv-crit{color:#ff4444}.sv-high{color:#ff8833}.sv-med{color:#ffcc33}.sv-low{color:#44cc44}.sv-blue{color:#44aaff}.sv-wht{color:#c8d8e8}
+/* Sections */
+.section{padding:18px 16px;border-bottom:1px solid #0f1e2e;max-width:1400px;width:100%;display:none}
+.section.active{display:block}
+.section h2{font-size:13px;font-weight:700;color:#8aaacf;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cnt-badge{font-size:11px;color:#4ab;background:#0a1a2a;padding:1px 7px;border-radius:8px;font-weight:400;letter-spacing:0}
+/* Findings */
+.findings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.finding-card{background:#0d1a2e;border:1px solid #1a2a3a;border-radius:6px;padding:12px;display:flex;gap:10px;align-items:flex-start}
+.finding-card.crit{border-left:3px solid #ff4444}.finding-card.high{border-left:3px solid #ff8833}
+.finding-card.med{border-left:3px solid #ffcc33}.finding-card.low{border-left:3px solid #44cc44}
+.finding-icon{font-size:18px;flex-shrink:0}.finding-title{font-size:12px;font-weight:600;color:#e8f0f8;margin-bottom:4px}
+.finding-detail{font-size:11px;color:#6888a8;line-height:1.5}
+/* Controls */
+#rule-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-pill{font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid #2a3a4a;background:none;color:#8aa8c8;cursor:pointer;transition:all .15s}
+.filter-pill.active{background:#1a3a5a;border-color:#3a6a9a;color:#8ad0f8}
+#rule-search{padding:4px 10px;background:#08101c;border:1px solid #1a2a3a;color:#c8d8e8;font-size:11px;border-radius:4px;outline:none;width:240px}
+#rule-search::placeholder{color:#3a5a7a}
+/* Rule cards */
+.rules-list{display:flex;flex-direction:column;gap:8px}
+.rule-card{background:#0d1a2e;border:1px solid #1a2a3a;border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.rule-card:hover{border-color:#2a4a6a}.rule-card.expanded{border-color:#3a6a9a}
+.rule-head{display:flex;flex-direction:column;padding:0}
+.rh-top{display:flex;align-items:center;padding:9px 12px;gap:10px}
+.rh-ids{display:flex;align-items:center;gap:0;padding:0 12px 8px;flex-wrap:wrap}
+.action-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;min-width:68px;text-align:center}
+.ab-BLOCK{background:#5a0a0a;color:#ff8888}.ab-REVIEW{background:#4a2a00;color:#ffaa55}
+.ab-MONITOR{background:#3a3a00;color:#ffdd55}.ab-ALLOW{background:#0a3a0a;color:#55cc55}
+.risk-badge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;flex-shrink:0}
+.rb-CRITICAL{background:#4a0a0a;color:#ff6a6a}.rb-HIGH{background:#4a2a00;color:#ffaa4a}
+.rb-MEDIUM{background:#3a3a00;color:#ffdd4a}.rb-LOW{background:#0a3a0a;color:#4aaa4a}
+.rule-port{font-size:14px;font-weight:700;font-family:'Courier New',monospace;color:#c8d8e8;min-width:55px}
+.rule-svc{font-size:11px;color:#8aa8c8;min-width:90px}
+.rule-flow{font-size:10px;color:#6888a8;flex:1;font-family:'Courier New',monospace}
+.rule-dest-info{font-size:10px;color:#5a9a5a;min-width:100px;text-align:right}
+.rule-cnt{font-size:11px;font-family:'Courier New',monospace;color:#4a9a8a;min-width:55px;text-align:right}
+.risk-bar{height:3px}
+.rb-crit{background:#ff4444}.rb-high{background:#ff8833}.rb-med{background:#ffcc33}.rb-low{background:#44cc44}
+/* Identity row fields */
+.id-field{display:flex;flex-direction:column;padding:0 14px 0 0;border-right:1px solid #1a2a3a;margin-right:14px;min-width:0}
+.id-field:last-child{border-right:none;margin-right:0}
+.id-lbl{font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:2px;white-space:nowrap}
+.id-val{font-size:10px;color:#a8c8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;font-family:'Courier New',monospace}
+.id-val.host{color:#79c0ff;max-width:260px}
+.id-val.app{color:#c8a8e8;font-family:'Segoe UI',sans-serif;max-width:200px}
+.id-val.apm{color:#4a9a8a;max-width:140px}
+.id-val.dest-app{color:#5a9a5a;font-family:'Segoe UI',sans-serif;max-width:180px}
+.id-val.none{color:#3a5a7a;font-family:'Segoe UI',sans-serif;font-style:italic}
+.id-val.bu{color:#c8a060;max-width:180px}.id-val.site{color:#60a8c8;max-width:200px}
+.id-val.heritage{color:#9a70c8;max-width:120px}.id-val.env{color:#70c870;max-width:100px}
+.dsrc-badge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-right:3px}
+.dsrc-snow{background:#0d2a4a;color:#60a8f8}.dsrc-ql{background:#1a2a0a;color:#70c840}
+.dsrc-wiz{background:#2a0a2a;color:#c870f8}.dsrc-adl{background:#2a1a0a;color:#f8a040}
+.hbadge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700}
+.hb-cvs{background:#0a2a4a;color:#4ab0f8}.hb-aetna{background:#2a1a0a;color:#f8a840}
+.hb-hcb{background:#1a0a2a;color:#c880f8}
+.src-host-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.shg-field{display:flex;flex-direction:column;gap:2px}
+.shg-label{font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.shg-val{font-size:10px;color:#a8c8e8;font-family:'Courier New',monospace;word-break:break-all}
+/* Rule body */
+.rule-body{display:none;padding:14px;border-top:1px solid #1a2a3a;background:#08101c}
+.rule-body.open{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rb-section{margin-bottom:12px}
+.rb-label{font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:8px}
+.rb-rec{font-size:11px;color:#a8c8a8;margin-bottom:10px;padding:7px 10px;background:#0a1a0a;border-left:3px solid #3a7a3a;border-radius:0 3px 3px 0;line-height:1.5}
+/* Rule spec */
+.rule-spec{font-family:'Courier New',monospace;font-size:11px;background:#061018;border:1px solid #1a2a3a;border-radius:4px;padding:10px;margin-bottom:10px;line-height:1.8;white-space:pre}
+.rs-action{font-weight:700}.rs-allow{color:#44cc44}.rs-block{color:#ff4444}.rs-review{color:#ffaa33}.rs-monitor{color:#ffdd33}
+.rs-field{color:#5a9acf}.rs-val{color:#c8d8e8}.rs-comment{color:#3a5a7a}
+/* Source chips */
+.src-chip{background:#0d1526;border:1px solid #1a2a3a;border-radius:4px;padding:5px 8px;margin-bottom:5px;font-size:10px}
+.sc-cidr{font-family:'Courier New',monospace;color:#a8c8f8;font-size:11px;font-weight:600}
+.sc-meta{color:#6888a8;margin-top:2px;line-height:1.4}
+.sc-compliance{font-size:9px;padding:1px 4px;border-radius:2px;margin-left:3px;font-weight:700}
+.sc-pci{background:#4a1a00;color:#ff8a4a}.sc-hipaa{background:#1a004a;color:#8a8aff}.sc-sox{background:#2a1a00;color:#ffcc44}
+/* Dest chips */
+.dest-chip{display:flex;justify-content:space-between;padding:3px 0;font-family:'Courier New',monospace;font-size:10px;color:#a8d8a8;border-bottom:1px solid #0f1e2e}
+.dc-provider{color:#6888a8;font-family:'Segoe UI',sans-serif}
+/* Port table */
+.port-table{width:100%;border-collapse:collapse;font-size:11px}
+.port-table th{color:#5a7a9a;font-weight:600;text-align:left;padding:6px 10px;border-bottom:2px solid #1a2a3a;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.port-table td{padding:7px 10px;border-bottom:1px solid #0f1e2e;vertical-align:top}
+.port-table tr:hover td{background:#0d1a2e}
+.port-num{font-family:'Courier New',monospace;font-size:13px;font-weight:700}
+.port-note{font-size:10px;color:#6888a8;margin-top:2px}
+.port-bar-wrap{background:#0a1420;border-radius:3px;height:6px;margin-top:4px;width:120px}
+.port-bar-fill{height:6px;border-radius:3px}
+/* Src24 table */
+.src-table{width:100%;border-collapse:collapse;font-size:10px}
+.src-table th{color:#5a7a9a;font-weight:600;text-align:left;padding:5px 8px;border-bottom:2px solid #1a2a3a;font-size:9px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.src-table td{padding:5px 8px;border-bottom:1px solid #0f1e2e;vertical-align:middle}
+.src-table tr:hover td{background:#0d1a2e;cursor:pointer}
+.mono{font-family:'Courier New',monospace}
+.port-pill{display:inline-block;font-size:9px;font-family:'Courier New',monospace;padding:1px 4px;border-radius:3px;margin:1px;background:#1a2a3a}
+/* Dest table */
+.dest-table{width:100%;border-collapse:collapse;font-size:11px}
+.dest-table th{color:#5a7a9a;font-weight:600;text-align:left;padding:5px 8px;border-bottom:2px solid #1a2a3a;font-size:9px;text-transform:uppercase;letter-spacing:.4px}
+.dest-table td{padding:5px 8px;border-bottom:1px solid #0f1e2e}
+.dest-table tr:hover td{background:#0d1a2e}
+.provider-badge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.pb-aws{background:#1a2a00;color:#88cc44}.pb-azure{background:#001a3a;color:#4488ff}
+.pb-gcp{background:#001a1a;color:#44cccc}.pb-cs{background:#1a0a2a;color:#cc88ff}
+.pb-isp{background:#1a1a2a;color:#88aaff}.pb-transit{background:#0a1a2a;color:#44aacc}
+.pb-corp{background:#1a1a0a;color:#aaaa44}.pb-unk{background:#1a1a1a;color:#888888}
+
+/* ── Session Lifecycle Summary Frame ── */
+#funnel-frame{background:#0d1526;border:1px solid #1a2a3a;border-radius:8px;padding:16px 20px;margin-bottom:18px}
+#funnel-frame h3{font-size:11px;font-weight:700;color:#8aaacf;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.funnel-desc{font-size:12px;color:#a8c8e8;line-height:1.7;margin-bottom:14px;padding:10px 14px;background:#08101c;border-radius:5px;border-left:3px solid #2a5a8a}
+.funnel-desc b{color:#e8f0f8}
+.funnel-stages{display:flex;align-items:stretch;gap:0;border:1px solid #1a2a3a;border-radius:6px;overflow:hidden;margin-bottom:10px}
+.funnel-stage{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #1a2a3a;position:relative;transition:background .15s;min-width:0}
+.funnel-stage:last-child{border-right:none}
+.funnel-stage:hover{background:#0f1e2e}
+.fs-n{font-size:18px;font-weight:700;font-family:'Courier New',monospace;line-height:1.1}
+.fs-pct{font-size:10px;color:#8b949e;margin-top:1px}
+.fs-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;margin-top:5px;color:#6888a8;line-height:1.3}
+.fs-icon{font-size:14px;margin-bottom:3px}
+.fs-arrow{font-size:16px;color:#2a3a4a;align-self:center;flex:0;padding:0 4px}
+.funnel-close{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.fc-pill{display:flex;align-items:center;gap:5px;background:#08101c;border:1px solid #1a2a3a;border-radius:4px;padding:5px 10px;font-size:11px}
+.fc-pill b{font-family:'Courier New',monospace}
+.funnel-note{font-size:10px;color:#3a5a7a;margin-top:8px;font-style:italic}
+
+
+/* ── Source IP grouped view ── */
+.subnet-group{background:#0d1526;border:1px solid #1a2a3a;border-radius:6px;margin-bottom:8px;overflow:hidden}
+.sg-header{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .12s}
+.sg-header:hover{background:#0f1e2e}
+.sg-cidr{font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:#a8c8f8}
+.sg-site{font-size:10px;color:#6888a8;flex:1}
+.sg-meta{font-size:10px;color:#4a9a8a;white-space:nowrap}
+.sg-toggle{color:#3a5a7a;font-size:11px;flex-shrink:0;transition:transform .2s}
+.sg-toggle.open{transform:rotate(90deg)}
+.sg-ips{display:none;border-top:1px solid #1a2a3a}
+.sg-ips.open{display:block}
+.ip-row{display:flex;align-items:flex-start;gap:10px;padding:7px 14px;border-bottom:1px solid #0f1e2e;font-size:11px}
+.ip-row:last-child{border-bottom:none}
+.ip-row:hover{background:#0a1420}
+.ip-addr{font-family:'Courier New',monospace;color:#79c0ff;min-width:120px;flex-shrink:0;font-size:11px;font-weight:600}
+.ip-host{color:#a8c8e8;min-width:220px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ip-no-host{color:#3a5a7a;font-style:italic}
+.ip-os{color:#6888a8;min-width:80px;flex-shrink:0}
+.ip-app{color:#8888a8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ip-env{font-size:9px;padding:1px 4px;border-radius:3px;background:#1a2a3a;color:#6888a8;flex-shrink:0}
+.ip-csna{font-size:9px;font-family:'Courier New',monospace;color:#3a7a3a;display:block;margin-top:1px}
+
+
+/* ── Log Event Modal ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal-box{background:#0d1526;border:1px solid #2a4a6a;border-radius:8px;width:92vw;max-width:1100px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.7)}
+#modal-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #1a2a3a;flex-shrink:0}
+#modal-title{font-size:13px;font-weight:700;color:#e8f0f8;flex:1}
+#modal-sub{font-size:11px;color:#6888a8}
+#modal-close{background:none;border:none;color:#6888a8;font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
+#modal-close:hover{color:#e8f0f8}
+#modal-body{overflow-y:auto;padding:12px 16px;flex:1}
+#modal-body::-webkit-scrollbar{width:5px}
+#modal-body::-webkit-scrollbar-thumb{background:#2a3a4a}
+.log-table{width:100%;border-collapse:collapse;font-size:11px}
+.log-table th{color:#5a7a9a;font-weight:600;text-align:left;padding:6px 10px;border-bottom:2px solid #1a2a3a;font-size:9px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;position:sticky;top:0;background:#0d1526}
+.log-table td{padding:6px 10px;border-bottom:1px solid #0f1e2e;vertical-align:top}
+.log-table tr:hover td{background:#0d2040}
+/* Location breakdown */
+.loc-type-row{background:#0d1a2e;cursor:pointer;transition:background .15s}
+.loc-type-row:hover{background:#112030}
+.loc-type-cell{font-size:12px;font-weight:700;padding:10px 12px;color:#e8f0f8}
+.loc-site-row{background:#080f1a;display:none}
+.loc-site-row.open{display:table-row}
+.loc-site-cell{padding:7px 12px 7px 28px;font-size:11px;color:#8aaacf;border-bottom:1px solid #0d1a2a}
+.loc-subnet-row{background:#060c14;display:none}
+.loc-subnet-row.open{display:table-row}
+.loc-subnet-cell{padding:5px 12px 5px 48px;font-size:10px;color:#5a7a9a;font-family:'Courier New',monospace;border-bottom:1px solid #080e18}
+.loc-table{width:100%;border-collapse:collapse}
+.loc-table th{color:#4a6a8a;font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:7px 12px;border-bottom:2px solid #1a2a3a;white-space:nowrap;text-align:right}
+.loc-table th:first-child{text-align:left}
+.loc-table td{text-align:right;padding:6px 12px;border-bottom:1px solid #0a1520}
+.loc-table td:first-child{text-align:left}
+.hn-bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-right:4px}
+.lt-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:.4px;margin-right:6px}
+.lt-cvs-dc{background:#0a2a4a;color:#4ab8f8}.lt-aetna-dc{background:#1a1a4a;color:#8888ff}
+.lt-colo{background:#1a2a1a;color:#44cc88}.lt-corporate{background:#1a1a1a;color:#8a9aaa}
+.lt-mail-order{background:#2a1a0a;color:#cc8844}.lt-call-center{background:#0a2a2a;color:#44aaaa}
+.lt-specialty{background:#2a0a2a;color:#cc44cc}.lt-hcb{background:#0a1a2a;color:#4488cc}
+.lt-retail{background:#2a2a0a;color:#cccc44}.lt-cloud{background:#0a2a1a;color:#44cc66}
+.lt-offshore{background:#2a1a1a;color:#cc6644}.lt-remote{background:#1a1a2a;color:#8844cc}
+.lt-unknown{background:#1a1a1a;color:#6a7a8a}
+.lt-unregistered{background:#2a1500;color:#ff8833}
+.hn-good{color:#44cc88}.hn-med{color:#ffcc33}.hn-poor{color:#ff6644}
+.lt-ip{font-family:'Courier New',monospace;color:#79c0ff;white-space:nowrap}
+.lt-dest{font-family:'Courier New',monospace;color:#a8d8a8;white-space:nowrap}
+.lt-host{color:#a8c8e8;font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt-app-name{color:#c8a8e8;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt-pkts{font-family:'Courier New',monospace;color:#4a9a8a;text-align:right}
+.lt-end{font-size:10px;white-space:nowrap}
+.lt-provider{font-size:10px;color:#5a9a5a;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt-action{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap}
+.end-fin{color:#44cc44}.end-rst{color:#ff8833}.end-aged{color:#6888a8}
+.modal-empty{color:#4a6a8a;font-size:12px;padding:20px;text-align:center}
+
+
+/* ── Flow Map ── */
+#flow-canvas{cursor:crosshair}
+.flow-tooltip{position:fixed;background:#0d1526;border:1px solid #2a4a6a;border-radius:5px;padding:8px 12px;font-size:11px;color:#c8d8e8;pointer-events:none;z-index:300;display:none;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#2a3a4a}
+</style>
+</head>
+<body>
+<div id="nav">
+  <h1>🛡 PA Firewall — Rule Recommendations</h1>
+  <button class="nb active" onclick="navTo('sec-findings',this)">🔍 Key Findings</button>
+  <button class="nb" onclick="navTo('sec-rules',this)">📋 Rule Candidates</button>
+  <button class="nb" onclick="navTo('sec-ports',this)">⚠ Port Risk</button>
+  <button class="nb" onclick="navTo('sec-src',this)">🖥 Source IPs</button>
+  <button class="nb" onclick="navTo('sec-loc',this)">🏢 Source Locations</button>
+  <button class="nb" onclick="navTo('sec-dests',this)">📡 Destinations</button>
+  <button class="nb" onclick="navTo('sec-flow',this)">🗺 Flow Map</button>
+  <button class="nb" onclick="navTo('sec-rfc',this)">⛔ RFC Violations</button>
+  <button class="nb" onclick="navTo('sec-policy',this)">📐 Optimized Policy</button>
+</div>
+<div id="statsbar">
+  <div class="stat"><div class="stat-val sv-wht" id="st-sess">—</div><div class="stat-lbl">Sessions</div></div>
+  <div class="stat"><div class="stat-val sv-wht" id="st-rules">—</div><div class="stat-lbl">Rule Candidates</div></div>
+  <div class="stat"><div class="stat-val sv-crit" id="st-block">—</div><div class="stat-lbl">BLOCK</div></div>
+  <div class="stat"><div class="stat-val sv-high" id="st-review">—</div><div class="stat-lbl">REVIEW</div></div>
+  <div class="stat"><div class="stat-val sv-med" id="st-monitor">—</div><div class="stat-lbl">MONITOR</div></div>
+  <div class="stat"><div class="stat-val sv-low" id="st-allow">—</div><div class="stat-lbl">ALLOW</div></div>
+  <div class="stat"><div class="stat-val sv-crit" id="st-crit">—</div><div class="stat-lbl">Critical Ports</div></div>
+  <div class="stat"><div class="stat-val sv-high" id="st-high">—</div><div class="stat-lbl">High Risk</div></div>
+  <div class="stat"><div class="stat-val sv-blue" id="st-src24">—</div><div class="stat-lbl">Src /24s</div></div>
+  <div class="stat"><div class="stat-val sv-blue" id="st-dests">—</div><div class="stat-lbl">Dest IPs</div></div>
+  <div class="stat"><div class="stat-val sv-crit" id="st-rfc">—</div><div class="stat-lbl">RFC Violations</div></div>
+</div>
+
+<!-- ── Key Findings ── -->
+<div class="section active" id="sec-findings">
+  <h2>🔍 Key Findings</h2>
+  <div id="funnel-frame">
+    <h3>📊 Session Lifecycle Analysis</h3>
+    <div class="funnel-desc" id="funnel-desc">Loading…</div>
+    <div class="funnel-stages" id="funnel-stages"></div>
+    <div class="funnel-close" id="funnel-close"></div>
+    <div class="funnel-note" id="funnel-note"></div>
+  </div>
+  <div class="findings-grid" id="findings-grid"></div>
+  <div style="margin-top:20px;padding:12px;background:#0d1a2e;border-radius:6px;border-left:3px solid #2a5a8a;font-size:11px;color:#6888a8">
+    <b style="color:#8aaacf">Methodology:</b> Sessions filtered to established connections (total packets &gt; 10).
+    Source IPs enriched from all_IP_networks (v4.0 SSOT). Destination IPs enriched via longest-prefix-match
+    against AWS, Azure, Google Cloud and CrowdStrike IP datasets. Rule logic: <code style="color:#a8c8f8">
+    SRC_IP (&gt;1024) → DEST_IP:DEST_PORT</code>. Firewall: <code style="color:#a8c8f8">PAZSHDC-SEC-EXTWIR-PA-01</code>.
+    Generated: <code style="color:#a8c8f8">2026-09-09T20:19:08Z</code>.
+  </div>
+</div>
+
+<!-- ── Rule Candidates ── -->
+<div class="section" id="sec-rules">
+  <h2>📋 Rule Candidates <span class="cnt-badge" id="rules-cnt"></span></h2>
+  <div id="rule-controls">
+    <button class="filter-pill active" data-action="">All</button>
+    <button class="filter-pill" data-action="BLOCK">🚫 BLOCK</button>
+    <button class="filter-pill" data-action="REVIEW">🔍 REVIEW</button>
+    <button class="filter-pill" data-action="MONITOR">👁 MONITOR</button>
+    <button class="filter-pill" data-action="ALLOW">✅ ALLOW</button>
+    <input id="rule-search" type="text" placeholder="Search port, service, IP, provider…">
+  </div>
+  <div class="rules-list" id="rules-list"></div>
+</div>
+
+<!-- ── Port Risk ── -->
+<div class="section" id="sec-ports">
+  <h2>⚠ Port Risk Analysis</h2>
+  <table class="port-table">
+    <thead><tr><th>Port</th><th>Service</th><th>Risk</th><th>Sessions</th><th>Volume</th><th>Assessment &amp; Recommendation</th></tr></thead>
+    <tbody id="port-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ── Source /24s ── -->
+<div class="section" id="sec-src">
+  <h2>🖥 Source IPs — by Subnet <span class="cnt-badge" id="src-cnt"></span>
+    <button onclick="downloadUnknownHostsCSV()"
+      style="margin-left:12px;background:#0a1a2a;border:1px solid #3a6a9a;color:#8ac0ff;
+             font-size:10px;padding:3px 10px;border-radius:3px;cursor:pointer;font-weight:700">
+      ⬇ Unknown Hosts CSV
+    </button>
+  </h2>
+  <div id="src-list"></div>
+</div>
+
+<!-- ── Source Locations ── -->
+<div class="section" id="sec-loc">
+  <h2>🏢 Source Traffic — by Location Type <span class="cnt-badge" id="loc-cnt"></span>
+    <button id="btn-unreg-csv" onclick="downloadUnregisteredCSV()"
+      style="display:none;margin-left:12px;background:#2a1500;border:1px solid #ff8833;color:#ff8833;
+             font-size:10px;padding:3px 10px;border-radius:3px;cursor:pointer;font-weight:700">
+      ⬇ Unregistered Subnets CSV
+    </button>
+  </h2>
+  <p style="font-size:11px;color:#5a7a9a;margin-bottom:14px">Click a location type to expand sites. Click a site to expand subnets. Hostname coverage % = hosts with reverse-DNS or CMDB record.</p>
+  <div id="loc-list"></div>
+</div>
+
+<!-- ── Destinations ── -->
+<div class="section" id="sec-dests">
+  <h2>📡 Destination IPs <span class="cnt-badge" id="dest-cnt"></span></h2>
+  <table class="dest-table">
+    <thead><tr>
+      <th>Dest IP</th><th>Provider / Org</th><th>Service</th>
+      <th>Country</th><th>City</th><th>ASN / Org</th>
+      <th>Class</th><th>Sessions</th><th>Src /24s</th><th>Ports</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="dest-tbody"></tbody>
+  </table>
+</div>
+
+<script type="text/plain" id="D">H4sIAAAAAAAC/+Va63PaOhb/VzT+1M5gioGEhG+UsLdMyeMCSXaazXiELUATY7uWSEoz+d/3HEk2NjgJTdp0u3fubWu9j87jdx7i3hKSSmG17y0ZSRq4ggnBoxB6nFbF9CXLgEFHo2KF7iSIvBsYxO+E3XJ2Z7Vr2FhEIZdRYrXr2KJBEKUjXsIl92hgVs35bJ6uYT5fLsyS9QKRePWmOc9nQprP2OM4pCbNWMgSKpnvLiX0WPVafd+uHcL/43qt7Ry2awdfrIol4OxYurcswUvhvGq9WoOB6TIMWeCq+wFdtUbWFUQzd8rVha+slk9Xwh13z+x/9U+qnri1rh9gJg99Hs5wxr0VsFsGW1h4S9iYe+qc/yz9g4YPfzM6weN4IBnwxtLsA8ZyGTBoO2QIzH0n3pMh86LFgoU+88k0SsjHwWn3M8z0maQcD+gaNtoJFzdEJnQ65R6JQhJHiRSk3qiSEUtuucdEm4xZEDJZJeM5E4ykQiViHi0Dn0wYUYTAUVQSOWckZglfMKCR8AVKBVgbrKrWQ2V9QZRP7n71/ZqTv5kXREs/d7OxIVBGxCGfw+guJF2c8mFE6YicJdEt91kCN8/fcRzFbdJZ0O9RWAV2VEg/9Mg7p5Xd4H16JdQLHlKprkUTRmC3UPIpp5OAESCv5jSJlzC4CAnpAm8axwHwD1fYAV3BVZVeE1CjOTTknIZEqRUQjSwlSocFMOE6VY7MTIzKiFXoRmGwUiqJDfhD0TygCdv5Yk5vmGr5VFJ3wUO+wMWHsBboB1K5mDMfdwPGeTEoXmi2xlaCqg8jdAZ6Hi11I76RAhup7u7v77VMLw+zzj1nD603dpVyIN1O02nqk+utmuPAJ3w14LQHPRHYo+bxycK+YxMRA1OYvfiq1yzDGxShDWRZbTiPh2KJ4uXAdBsvp4xYKq3Te6KAXJCjNqSj4y91C/gI9rvu7IcCpIbdPlN6i51nnS+jT0dde9Tr2r1/jy/7Q/usY4OuwbTnbLNiAYtd5IVmqfDmbAGkgfiCAJTZMkgGZouE8BgtsFZ1DmrV/YOqA+xQFCL4ZP3Nau2DcwADcwkMnrIkQYFNaSCYvo7gkrmoYrBo5EVSCp+CCna+EJuM5oySo65l2KEP3DusHrSqLdh7Px1AKQEHgdHUkxqpUvtHa0frH/bH/W5ngBTeIuJpC8cJjAq1IgUIrb3v9IT3qS0Y0w/BmhNED8REVrT9Krk6AmqIFy1Dmaza5Hx0Tbrahtg3tB4uwfDClbIccsflnIBIZoCFVSAEj3XDSCIjugGjiWTfJEnYAroI9UC+okrOQwAQn+MlgVKFQimFCYsD6pl9R6NPuKciRTmOVO+BTXuZvkPDSb2UFntzH3ioVPkqVUdQC4BVV/NJD3ixjaa2u+YpKRm+wPXOR1axL1WAc3CCgDUjcKoALdEUwAwBhabT0fm5RqQnaScV4Oe4gNvj3p1Ro9ZsHqZcAaLGnXEvO49LnHQ2j1jIv+V2WK9cd6ZUbewBfym/qBVN0apITTiYJk0PNkdU0v5MiYU7iWa41BiBUW1XxCA9pO3846Cf03k3maLC9jsnnewWsecuqPTmhg3Gm7mSg1YiCp2cDo9B2TWSRGDVNJRqFBfoMaME9Hampe7OFfsK9kzyxgYukmiVMHpHc46Gg6NZChsG76LkBj5J+vmBeDRJ4GgSKUdBvwvFMZkaoMsBmNFTZphSrzWrh4cQahQQJeutfYA2AEokpBHQ8bhr989A8Z7AmUggb8GqwEVdnJ3ojRG2N9a/BJPqtYNqHTh1WHWazQ1QQm+Rw6Xj05P++HS4Rqbj3lH//DjDpTNYZWsXk8Omc+0/MBrYdO9G3ZS31bbPQnCeHpiRARcCrhT+ROA7VzCPJbIEcQBYAgpBwpTDQoWAZmMTGKwg6oG4iumDzAYGXg7z8LLv7OcBZt9xDooQ49TrB401ymy7wqK7/OPgx2k1U951T//qnYxt6NnAn44MwCLpJv7kJq7RZ3uTIgB1Iwi7JOlC+LsMTYQmKmQw6GZkqBgUtKBCTuc8elMk+ng++AwAU7E63XH/ome190ogyYzlIclpoBp5URDQWED8htauQ48SiHgECqZffWQQfG0b/7bh03ihJ7PwVn9MlvpfhIMnkaBoB0bFMe5d0x8qL2xANkc9WUjP5jDFIwUUIQoDlCVqOCAmQ3wh7HrRzCNbtkZylkbKqcq+DFQ7ZVDtVBu1bah2SqD6bNg/6fbPOgO30+32RqMXInbJNi8KJg+aVae2X93bq7b2isCNAf+P4rZKEv4Y2G7lYbvRyoF2o1GE7FYth9ebCc6fFx/W680Mogf9v8/7R5e9jxsIPaCQXYWzrQgR125j9NYuRYge8K9L7pNLNiEfqxfZ0fqICjnmHhBOwzcF5kH/r09jEG0JHOuhAhrXnsdigwFP2/rzkFyy6PXI3EqRuVV7HpbxIiROAFt5DCagUy9SgAqClq7BWX29DpsDpR5gVGTTuMiTJG12GISu4xVVqu5OVm6KYPcmJW5f1WB42Lvo9y6hAd8ptLWvnEod2p3B4FQNgWrA7gvcxSD7/WZeDz0e95OyhB9yBJrmSI/KZ0o9HmiLOwJ/5AFogQpWLGCVK1cxCnfYsc9OTwd2d4TKnQBagdG4oLMw1vtr6I4+9TqX9riPugdgIOlMRU0XI6xYFJOGNbWbycRLiO2WEFvo36b1GPCvf9Ibb9BKIcunyc0HJDpFWguNKU4i3823Pe4u+Dd0lMqqlXhg3OWqpze24WL24aFdz13eeeTyzmsu7/345bWgSq6PokpLXqBrCCr3xToPtGNT8kQYLvpSxAFduS3k6gmb6TvlEnDhKncJnafjT72h9t4p+ecjG2i7PB1+Nv0BnajS7fmInGSm29Wmq3H2ZXWA1Kl5kc9Sb7e7owPvsOnmNusXZaWLrcrHjmWTMrez6XHSOcrtYTfqACiGjUqgKsrxchJwj1DfTzRQbfm4osNS2ptPqnfXAMiXunnxpynPL5T9S1KwX6YEOlF8JH/cyj93zV5/mxoUQ/Td1SAfkmW6kI+0fqE+7B7v/TooMIFqeYy6FeTuHCP/Jj140GmPjjoLlbV17l1WQNvI1XbOmnKvXWkGpV7DMC/D0Eq/7eUzxXWkWZIQvgUZ+PyxrvdvvnJsPYP81JeGh+ss+b96NMbKSQpSdR15K5+vP1P5Ktld/1CBcBmihQvQsnwJQecGu8Y3qnSQIsILgj0gR2FSLjuBaE1/GO6nWY+J8VyM3tLmAkK49ZiyWdPcjAFxGBIhkZ2xa0SIEliAPmGVwdClY7Tt4BStT2sQcib6pj/mXCZLfFS1tJH/7JpcJNzsKfuREl0M+UwShavFD0g2yxqRVyyUa5msW54IqRtTOS+RRyrOXMiK9w9dEeJvLkzj65IGK5E17/h3/a2erkW0TLxUoFrTNODjBC9FaOO/WLLWw4drNPBH4vYc5DxlUAhC108XcN7AgLz/CQN60n62zOdZkymkNK8xmlcXT0ptp7SW8o82oa0qRc5jPumUGtdlD+O/yW6KJZE/13BU0eZFZrP5s5Oc4WwbymPm8U81B1NwL6BQ8QG7LFR7RXz2usw9nMzMvf7fU3ilQdnr0a45/a4p/Ebuj6hY+ghWFlb8QCzxk/LzN5H6b0zUH5X105n7zon6Roq/lnbx93Nl/u8Zp/czKrFvIt3fWZJ9XLxP1Gh3LMlulHLVcw/WX/AxJ44C7q30N/gydwI03PiAxQrsDVu7FyM7iz2Ekvn6R+rFn7Drl349kvvBOjo+swR/rIu/LgctOqiZLV39m1b8oehzL3Q/7+DlBBRU5CsQG9Eeuj7477/TKcjitS8AAA==</script>
+<script>
+'use strict';
+var D=null, curAction='', curRuleSearch='';
+
+function decomp(id){
+  var el=document.getElementById(id);
+  var b64=el.textContent.trim();
+  var raw=atob(b64);
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+  var ds=new DecompressionStream('gzip');
+  var writer=ds.writable.getWriter();
+  writer.write(bytes); writer.close();
+  return new Response(ds.readable).json();
+}
+
+// ── v2.0 helpers: ipam/dest are now in lookup tables to dedupe the payload ──
+function getIpam(r){
+  if(!r) return {};
+  if(!D||!D.ipam_by_src24) return {};
+  return D.ipam_by_src24[r.src24||''] || {};
+}
+function getDest(r){
+  if(!r) return {};
+  if(!D||!D.dest_by_ip) return {};
+  return D.dest_by_ip[r.dest_ip||''] || {};
+}
+
+// ── friendlyDest — human-readable "provider + service-type" label ─────────
+// Combines provider, svc_type, ds_class, and service into one clear label.
+// Examples:  "Akamai CDN"  "Amazon EC2"  "Azure Cloud"  "Cloudflare CDN"
+//            "Amazon Network"  "Zscaler Proxy"  "Google CDN"
+var _SVCTYPE_LABEL = {
+  'CDN':         'CDN',
+  'CLOUD-INFRA': 'Cloud',
+  'US-NETWORK':  'Network',
+  'ISP':         'ISP Range',
+  'SOCIAL':      'Social Media',
+  'PROXY':       'Proxy',
+  'DEVOPS':      'DevOps',
+  'EC2':         'EC2',
+  'S3':          'S3',
+  'CLOUDFRONT':  'CloudFront',
+};
+var _DSCLASS_LABEL = {
+  'IAAS':     'Cloud (IaaS)',
+  'SAAS':     'SaaS',
+  'CLOUD':    'Cloud',
+  'OTHER':    '',
+  'EXTERNAL': '',
+  'BOGON':    'RFC Violation',
+  'INTERNAL': 'Internal',
+};
+function friendlyDest(destI){
+  if(!destI) return 'Unknown';
+  var provider  = destI.provider  || '';
+  var svcType   = destI.svc_type  || '';
+  var dsClass   = destI.ds_class  || '';
+  var service   = destI.service   || '';
+  var svcLabel  = destI.svc_label || '';
+
+  // Bogon / RFC-violation — show the violation flag as the label
+  if(dsClass === 'BOGON') return provider || 'RFC Violation';
+  if(dsClass === 'INTERNAL') return provider || 'Internal';
+
+  if(!provider || provider === 'Unknown'){
+    return service || svcLabel || dsClass || 'Unknown';
+  }
+
+  // Build qualifier: svc_type human label takes priority over ds_class label
+  var qualifier = _SVCTYPE_LABEL[svcType] || _DSCLASS_LABEL[dsClass] || '';
+
+  // Specific service name — only append if it adds info beyond the qualifier
+  // (skip if it's just a CIDR-range-name like "MONGO-89-192" or "Google-US")
+  var svcExtra = '';
+  if(service && qualifier === ''){
+    // No svc_type matched — surface the service name as a fallback
+    svcExtra = service;
+  }
+
+  if(qualifier) return provider + ' ' + qualifier;
+  if(svcExtra)  return provider + ' (' + svcExtra + ')';
+  return provider;
+}
+// Back-compat: old access patterns (r.ipam / r.dest) throughout the template
+// now just call these helpers. After the decomp() resolves we also monkey-patch
+// a getter onto each rule so legacy spots keep working without being touched.
+function hydrateRules(rules){
+  if(!rules) return;
+  for(var i=0;i<rules.length;i++){
+    var r=rules[i];
+    if(!('ipam' in r)){
+      Object.defineProperty(r,'ipam',{get:function(){return getIpam(this);},configurable:true});
+    }
+    if(!('dest' in r)){
+      Object.defineProperty(r,'dest',{get:function(){return getDest(this);},configurable:true});
+    }
+  }
+}
+function debounce(fn, ms){
+  var t=null;
+  return function(){
+    var args=arguments, ctx=this;
+    if(t) clearTimeout(t);
+    t=setTimeout(function(){ fn.apply(ctx, args); }, ms);
+  };
+}
+
+function navTo(id,btn){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  if(id==='sec-flow')   renderFlowMap();
+  if(id==='sec-rfc')    renderRfcTable();
+  if(id==='sec-policy') renderPolicyTable();
+  if(id==='sec-loc')    renderLocBreakdown();
+}
+
+function fmt(n){
+  n=Number(n||0);
+  if(n>=1e6)return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return (n/1e3).toFixed(0)+'K';
+  return String(n);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function riskColor(r){
+  return r==='CRITICAL'?'#ff4444':r==='HIGH'?'#ff8833':r==='MEDIUM'?'#ffcc33':'#44cc44';
+}
+function riskBarClass(r){
+  return r==='CRITICAL'?'rb-crit':r==='HIGH'?'rb-high':r==='MEDIUM'?'rb-med':'rb-low';
+}
+function providerBadge(p,cls){
+  var map={'amazon web services':'pb-aws','aws':'pb-aws','google':'pb-gcp','microsoft azure':'pb-azure','azure':'pb-azure','crowdstrike':'pb-cs'};
+  var key=(p||'').toLowerCase();
+  var c=map[key]||'';
+  if(!c){
+    if(cls==='ISP')               c='pb-isp';
+    else if(cls==='TRANSIT')      c='pb-transit';
+    else if(cls==='OTHER')        c='pb-corp';
+    else                          c='pb-unk';
+  }
+  return '<span class="provider-badge '+c+'">'+esc(p||'Unknown')+'</span>';
+}
+
+function compliancePills(src){
+  var out='';
+  var pci=src.pci||''; var cmp=src.compliance||'';
+  if(pci&&pci.indexOf('PCI')>=0) out+='<span class="sc-compliance sc-pci">PCI</span>';
+  if(cmp.indexOf('HIPAA')>=0)    out+='<span class="sc-compliance sc-hipaa">HIPAA</span>';
+  if(cmp.indexOf('SOX')>=0)      out+='<span class="sc-compliance sc-sox">SOX</span>';
+  return out;
+}
+
+function ruleSpec(r){
+  var act=r.action;
+  var actClass='rs-'+act.toLowerCase();
+  // v2.0 — collapsed rules have r.src_ip blanked and use r.src24 as the
+  // source address (already in CIDR form, e.g. 10.180.64.0/24). Per-host
+  // rules still emit /32 for precision.
+  var isCollapsed = r.collapsed_n && r.collapsed_n > 1;
+  var srcAddrPlain = r.src_ip || r.src24;         // for the comment lines
+  var srcAddrSpec  = isCollapsed ? r.src24 : (r.src_ip + '/32');   // for source-address field
+  var hostNote = r.hostname ? ' ('+r.hostname+')'
+                 : (isCollapsed ? ' ('+r.collapsed_n+' hosts)' : '');
+  var buNote   = r.src_bu   ? ' BU:'+r.src_bu : '';
+  var siteNote = (r.src_site_name||r.src_dc_name) ? ' '+( r.src_site_name||r.src_dc_name) : '';
+  var ipam2 = r.ipam||{};
+  var srcZone = ipam2.fw_policy || 'Inside';
+  var destProv = (r.dest&&r.dest.provider&&r.dest.provider!=='Unknown') ? '  # '+r.dest.provider+(r.dest.region?' ('+r.dest.region+')':'') : '';
+  var destZone = (r.dest&&r.dest.ds_class&&r.dest.ds_class!=='UNKNOWN') ? r.dest.ds_class.toLowerCase()+'-zone' : 'outside';
+  var ruleName = act+'-'+r.svc+'-'+(r.src_site_code||srcAddrPlain.replace(/[\.\/]/g,'-'))+'-to-'+r.dest_ip.replace(/\./g,'-')+'-'+r.dest_port;
+  var lines=[
+    '# '+r.reason,
+    '# Src: '+srcAddrPlain+hostNote+(buNote?'  '+buNote:'')+siteNote,
+    '# Dst: '+r.dest_ip+(r.dest&&r.dest.provider&&r.dest.provider!=='Unknown'?'  ['+r.dest.provider+(r.dest.service?' / '+r.dest.service:'')+(r.dest.region?' '+r.dest.region:'')+']':''),
+    '',
+    'policy-rule {',
+    '  name            = "'+ruleName+'";',
+    '  action          = '+act+';',
+    '  source-zone     = "'+srcZone+'";',
+    '  source-address  = "'+srcAddrSpec+'";',
+    '  dest-zone       = "'+destZone+'";',
+    '  dest-address    = "'+r.dest_ip+'/32";'+destProv,
+    '  dest-port       = '+r.dest_port+';',
+    '  application     = "'+(r.apps&&r.apps.length?r.apps[0]:'any')+'";',
+    '  service         = "application-default";',
+    '  log-start       = yes;',
+    '  log-end         = yes;',
+    '  log-setting     = "default";',
+    '}',
+  ];
+  var html='<div class="rule-spec">';
+  html+=lines.map(function(l,i){
+    if(i===0) return '<span class="rs-comment">'+esc(l)+'</span>';
+    if(l.trim().startsWith('action')) return '  <span class="rs-field">action</span>          = <span class="'+actClass+' rs-action">'+act+'</span>;';
+    if(l==='policy-rule {') return '<span style="color:#4a7aaf">policy-rule</span> {';
+    if(l==='}') return '}';
+    if(l==='') return '';
+    var m=l.match(/^(\s+)(\S+)(\s+=\s+)(.*)(;)$/);
+    if(m) return m[1]+'<span class="rs-field">'+esc(m[2])+'</span>'+m[3]+'<span class="rs-val">'+esc(m[4])+'</span>'+m[5];
+    return esc(l);
+  }).join('\n');
+  html+='</div>';
+  return html;
+}
+
+
+function fmtN(n){
+  n=Number(n||0);
+  if(n>=1e6)return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return (n/1e3).toFixed(0)+'K';
+  return String(n);
+}
+
+function renderFunnel(f, st){
+  if(!f) return;
+  var total = f.total || 1;
+  var minPkts = f.min_pkts || 10;
+
+  // Derive traffic type description from top ports and apps
+  var ports = Object.keys(f.top_ports||{}).map(Number);
+  var apps  = Object.keys(f.top_apps||{});
+  var is80443 = ports.some(function(p){return p===80||p===443;}) && !ports.some(function(p){return p!==80&&p!==443&&p<1024;});
+
+  var trafficDesc = '';
+  if(is80443){
+    var appList=apps.slice(0,3).join(', ');
+    trafficDesc='HTTP and HTTPS session traffic (ports 80/443). Top applications: <b>'+esc(appList)+'</b>. ';
+    trafficDesc+='Sessions aged out rather than closing with TCP-FIN — expected for UDP-based protocols (QUIC, DNS-crypt, DTLS) which do not use TCP teardown.';
+  } else if(f.tcp_fin===total){
+    var appList=apps.slice(0,3).join(', ');
+    trafficDesc='Non-standard port sessions that all closed cleanly with <b>TCP-FIN</b>. Applications: <b>'+esc(appList)+'</b>. ';
+    trafficDesc+='Every session completed its TCP teardown — this is the cleanest of the three log sets.';
+  } else {
+    var portList=ports.slice(0,5).join(', ');
+    trafficDesc='Non-standard port traffic (excl. 80/443) on ports <b>'+esc(String(portList))+'</b>. ';
+    trafficDesc+='Sessions did not close with TCP-FIN — ranging from connection attempts that were never answered to established sessions terminated by RST or aged out.';
+  }
+
+  // Build the narrative description
+  var synOnly     = f.syn_only     || 0;
+  var synSynAck   = f.syn_synack   || 0;
+  var handshake   = f.handshake    || 0;
+  var dataMin     = f.data_minimal || 0;
+  var estab       = f.established  || 0;
+  var pOut        = f.pkts_out_total || 0;
+  var pIn         = f.pkts_in_total  || 0;
+  var dvc         = (f.devices||[]).join(', ') || 'Unknown';
+  var zones       = (f.dest_zones||[]).join(', ') || 'Unknown';
+
+  var desc = '<b>Firewall:</b> '+esc(dvc)+'&ensp;|&ensp;<b>Destination zones:</b> '+esc(zones)+'<br><br>';
+  desc += trafficDesc;
+  desc += '<br><br>';
+  desc += 'Of <b>'+fmtN(total)+'</b> total sessions logged: ';
+
+  var parts = [];
+  if(synOnly>0)   parts.push('<b>'+fmtN(synOnly)+'</b> sent only a TCP-SYN with no response ('+Math.round(100*synOnly/total)+'%)');
+  if(synSynAck>0) parts.push('<b>'+fmtN(synSynAck)+'</b> received a SYN-ACK but never completed the handshake ('+Math.round(100*synSynAck/total)+'%)');
+  if(handshake>0) parts.push('<b>'+fmtN(handshake)+'</b> completed the three-way handshake but exchanged no application data ('+Math.round(100*handshake/total)+'%)');
+  if(dataMin>0)   parts.push('<b>'+fmtN(dataMin)+'</b> transferred minimal data — likely probes or application-layer failures ('+Math.round(100*dataMin/total)+'%)');
+  if(estab>0)     parts.push('<b>'+fmtN(estab)+'</b> established with real data exchange — <b>'+fmtN(pOut)+'</b> packets out / <b>'+fmtN(pIn)+'</b> packets in ('+Math.round(100*estab/total)+'%)');
+  desc += parts.join('; ') + '. ';
+  desc += 'Rule recommendations are based on the <b>'+fmtN(st.total_sessions)+'</b> sessions that passed the &ge;'+minPkts+'-packet threshold.';
+  document.getElementById('funnel-desc').innerHTML=desc;
+
+  // Build stage bars
+  var stages=[
+    {icon:'📤', n:total,      pct:100,                        lbl:'Sessions\nLogged',          col:'#2a5a8a'},
+    {icon:'🔌', n:synOnly,    pct:Math.round(100*synOnly/total),   lbl:'SYN Only\nNo Response',    col:'#6a2a2a'},
+    {icon:'🤝', n:synSynAck,  pct:Math.round(100*synSynAck/total), lbl:'SYN + SYN-ACK\nHalf-Open', col:'#6a4a00'},
+    {icon:'🔁', n:handshake,  pct:Math.round(100*handshake/total), lbl:'Handshake\nNo Data',        col:'#4a4a00'},
+    {icon:'📦', n:dataMin,    pct:Math.round(100*dataMin/total),   lbl:'Minimal\nData',            col:'#2a4a2a'},
+    {icon:'✅', n:estab,      pct:Math.round(100*estab/total),     lbl:'Established\n>'+minPkts+'pkts', col:'#1a6a1a'},
+  ];
+  // Remove stages with 0 count (e.g. TCP-FIN file has no SYN-only)
+  stages=stages.filter(function(st){return st.n>0;});
+
+  var html='';
+  stages.forEach(function(st,i){
+    if(i>0) html+='<div class="fs-arrow">→</div>';
+    html+='<div class="funnel-stage">';
+    html+='<div class="fs-icon">'+st.icon+'</div>';
+    html+='<div class="fs-n" style="color:'+st.col+'">'+fmtN(st.n)+'</div>';
+    html+='<div class="fs-pct">'+st.pct+'%</div>';
+    html+='<div class="fs-lbl">'+esc(st.lbl).replace(/\n/g,'<br>')+'</div>';
+    html+='</div>';
+  });
+  document.getElementById('funnel-stages').innerHTML=html;
+
+  // Close reason pills
+  var closeHtml='<span style="font-size:10px;color:#6888a8;align-self:center">Session close:</span>';
+  if(f.tcp_fin>0)  closeHtml+='<div class="fc-pill" style="border-color:#1a4a1a"><span style="color:#44cc44">✔</span> TCP-FIN <b style="color:#44cc44">'+fmtN(f.tcp_fin)+'</b> <span style="color:#5a7a5a">('+Math.round(100*f.tcp_fin/total)+'%)</span></div>';
+  if(f.tcp_rst>0)  closeHtml+='<div class="fc-pill" style="border-color:#4a2a00"><span style="color:#ff8833">↩</span> TCP-RST <b style="color:#ff8833">'+fmtN(f.tcp_rst)+'</b> <span style="color:#5a4a2a">('+Math.round(100*f.tcp_rst/total)+'%)</span></div>';
+  if(f.aged_out>0) closeHtml+='<div class="fc-pill" style="border-color:#2a2a4a"><span style="color:#6888a8">⏱</span> Aged-out <b style="color:#6888a8">'+fmtN(f.aged_out)+'</b> <span style="color:#3a4a5a">('+Math.round(100*f.aged_out/total)+'%)</span></div>';
+  document.getElementById('funnel-close').innerHTML=closeHtml;
+
+  // Note
+  var noteHtml='Analysis uses '+minPkts+'-packet threshold to distinguish established sessions from handshake-only or probe traffic. ';
+  noteHtml+='Total packets exchanged across all sessions: <b>'+fmtN(pOut+pIn)+'</b> (out: '+fmtN(pOut)+' / in: '+fmtN(pIn)+').';
+  document.getElementById('funnel-note').innerHTML=noteHtml;
+}
+
+function renderFindings(findings){
+  var html='';
+  findings.forEach(function(f){
+    html+='<div class="finding-card '+esc(f.level)+'">';
+    html+='<div class="finding-icon">'+f.icon+'</div>';
+    html+='<div style="flex:1">';
+    html+='<div class="finding-title">'+esc(f.title)+'</div>';
+    html+='<div class="finding-detail">'+esc(f.detail)+'</div>';
+    // "View Sessions" button — links to log event modal
+    if(f.filter){
+      var btnCol='#3a6a9a';
+      if(f.level==='crit') btnCol='#6a2a2a';
+      else if(f.level==='high') btnCol='#5a4a00';
+      else if(f.level==='med') btnCol='#3a4a00';
+      html+='<button onclick="showFindingSessions(\''+esc(f.filter)+'\',\''+esc(f.title)+'\')" '+
+            'style="margin-top:8px;padding:3px 10px;background:'+btnCol+';border:1px solid '+btnCol+'88;'+
+            'color:#c8d8e8;font-size:10px;border-radius:4px;cursor:pointer;white-space:nowrap"'+
+            '>📋 View Sessions →</button>';
+    }
+    html+='</div>';
+    html+='</div>';
+  });
+  document.getElementById('findings-grid').innerHTML=html;
+}
+
+function renderStats(st){
+  document.getElementById('st-sess').textContent   =fmt(st.total_sessions);
+  document.getElementById('st-rules').textContent  =fmt(st.total_rules);
+  document.getElementById('st-block').textContent  =fmt(st.n_block);
+  document.getElementById('st-review').textContent =fmt(st.n_review);
+  document.getElementById('st-monitor').textContent=fmt(st.n_monitor);
+  document.getElementById('st-allow').textContent  =fmt(st.n_allow);
+  document.getElementById('st-crit').textContent   =fmt(st.n_critical);
+  document.getElementById('st-high').textContent   =fmt(st.n_high);
+  document.getElementById('st-src24').textContent  =fmt(st.n_src24);
+  document.getElementById('st-dests').textContent  =fmt(st.n_dest);
+}
+
+// ── v2.0: action-indexed + precomputed haystack ─────────────────────────────
+// curAction picks the pre-split array (BLOCK/REVIEW/MONITOR/ALLOW) instead of
+// scanning all 161K rules every keystroke. rules_by_action stores indices
+// into D.rules (not copies), so wire payload stays small. _hay was computed
+// once on the Python side so the client never rebuilds it.
+function filterRules(){
+  if(!D) return [];
+  var source;
+  if(curAction && D.rules_by_action && D.rules_by_action[curAction]){
+    var idxArr = D.rules_by_action[curAction];
+    // idxArr is an array of integer indices into D.rules. Resolve once here.
+    source = new Array(idxArr.length);
+    for(var k=0;k<idxArr.length;k++){ source[k] = D.rules[idxArr[k]]; }
+  } else {
+    source = D.rules || [];
+  }
+  if(!curRuleSearch) return source;
+  var q = curRuleSearch.toLowerCase();
+  var out = [];
+  for(var i=0;i<source.length;i++){
+    var r = source[i];
+    // Prefer precomputed _hay; fall back to legacy computation for
+    // backward-compat with old reports.
+    var h = r._hay;
+    if(h === undefined){
+      h = ((r.src_ip||r.src24||'')+' '+(r.hostname||'')+' '+(r.dest_ip||'')+' '+
+           String(r.dest_port||'')+' '+(r.svc||'')+' '+(r.action||'')+' '+
+           ((getDest(r).provider)||'')+' '+((r.apps||[]).join(' '))).toLowerCase();
+    }
+    if(h.indexOf(q) >= 0) out.push(r);
+  }
+  return out;
+}
+
+// ── v2.0: incremental virtualized renderer ──────────────────────────────────
+// Instead of building HTML for all 161K rules on every filter change (the
+// original behaviour), only the first BATCH rules are rendered. An
+// IntersectionObserver on a sentinel row near the bottom appends the next
+// batch when the user scrolls close. Combined with lazy bodies, this keeps
+// first paint under a few hundred ms even on the MONITOR tab.
+var _ruleState = {
+  rules:   [],   // current filtered rule set
+  shown:   0,    // how many have been mounted
+  batch:   60,   // rows per chunk
+  observer: null // IntersectionObserver instance
+};
+
+function renderRules(){
+  _ruleState.rules = filterRules();
+  _ruleState.shown = 0;
+  document.getElementById('rules-cnt').textContent = _ruleState.rules.length;
+  var host = document.getElementById('rules-list');
+  if(!_ruleState.rules.length){
+    host.innerHTML = '<div style="padding:20px;color:#4a6a8a;font-size:11px">No rules match current filter.</div>';
+    if(_ruleState.observer){ _ruleState.observer.disconnect(); }
+    return;
+  }
+  host.innerHTML = '<div id="rules-sentinel" style="height:1px"></div>';
+  _renderNextBatch();
+  _ensureObserver();
+}
+
+function _renderNextBatch(){
+  var s = _ruleState;
+  if(s.shown >= s.rules.length) return;
+  var host = document.getElementById('rules-list');
+  var sentinel = document.getElementById('rules-sentinel');
+  var end = Math.min(s.shown + s.batch, s.rules.length);
+  var frag = document.createDocumentFragment();
+  var tmp = document.createElement('div');
+  for(var i=s.shown; i<end; i++){
+    tmp.innerHTML = buildRuleHead(s.rules[i]);
+    frag.appendChild(tmp.firstChild);
+  }
+  host.insertBefore(frag, sentinel);
+  s.shown = end;
+  if(s.shown >= s.rules.length && sentinel){ sentinel.remove(); }
+}
+
+function _ensureObserver(){
+  if(_ruleState.observer){ _ruleState.observer.disconnect(); }
+  var sentinel = document.getElementById('rules-sentinel');
+  if(!sentinel) return;
+  _ruleState.observer = new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){ _renderNextBatch(); }
+  }, {rootMargin: '400px 0px'});
+  _ruleState.observer.observe(sentinel);
+}
+
+// One delegated click handler replaces 161K inline onclicks. Wired on init.
+function _initRulesDelegation(){
+  var host = document.getElementById('rules-list');
+  if(!host || host._delegated) return;
+  host._delegated = true;
+  host.addEventListener('click', function(e){
+    var card = e.target.closest('.rule-card');
+    if(!card) return;
+    var idx = card.getAttribute('data-idx');
+    if(idx === null) return;
+    toggleRule(parseInt(idx, 10));
+  });
+}
+
+function buildRuleHead(r){
+  var idx = r._i || 0;
+  var html = '';
+  var destInfo = r.dest || {};
+  // v2.0 — friendlyDest() combines provider + svc_type into a clear label:
+  // "Akamai CDN", "Amazon EC2", "Azure Cloud", "Google CDN", etc.
+  var provStr  = friendlyDest(destInfo) || '?';
+  var rc = riskColor(r.risk);
+  html += '<div class="rule-card" id="rc-'+idx+'" data-idx="'+idx+'">';
+  html += '<div class="rule-head">';
+
+    // ── Top row: action | risk | port | service | flow | provider | count ──
+    html+='<div class="rh-top">';
+    html+='<span class="action-badge ab-'+r.action+'">'+r.action+'</span>';
+    html+='<span class="risk-badge rb-'+r.risk+'">'+r.risk+'</span>';
+    html+='<span class="rule-port">:'+r.dest_port+'</span>';
+    html+='<span class="rule-svc">'+esc(r.svc)+'</span>';
+    // App-ID badge — show PA app name prominently
+    if(r.apps && r.apps.length){
+      var appId = r.apps[0];
+      var appIdColors = {
+        'incomplete':'#cc5500','unknown-tcp':'#cc3300','unknown-udp':'#cc3300',
+        'ssl':'#3a5a7a','tanium':'#1a6a3a','crowdstrike':'#1a5a4a',
+        'google-base':'#1a4a8a','gmail-base':'#8a2a2a',
+        'whatsapp-base':'#2a6a2a','yahoo-mail-base':'#7a3a00',
+        'insufficient-data':'#5a5a2a'
+      };
+      var aColor = appIdColors[appId] || '#2a4a6a';
+      html+='<span style="background:'+aColor+';color:#fff;font-size:9px;font-weight:700;'
+           +'padding:2px 7px;border-radius:3px;margin-left:4px" title="PA App-ID">'+esc(appId)+'</span>';
+      if(r.apps.length>1) html+='<span style="color:#4a6a7a;font-size:9px;margin-left:3px">+'+String(r.apps.length-1)+'</span>';
+    }
+    html+='<span class="rule-flow" style="font-size:11px">'+esc(r.src_ip||r.src24)+'  →  '+esc(r.dest_ip)+'</span>';
+    // v2.0 — MONITOR collapsed-/24 badge
+    if(r.collapsed_n && r.collapsed_n > 1){
+      html+='<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;background:#1a3a5a;color:#8ac0ff;margin-left:4px;letter-spacing:.3px" title="Collapsed /24 — click card to see individual hosts">'+r.collapsed_n+' HOSTS</span>';
+    }
+    html+='<span class="rule-dest-info">'+providerBadge(provStr,'')+'</span>';
+    html+='<span class="rule-cnt">'+fmt(r.count)+' sess</span>';
+    // Traffic tier mini-badge in header
+    var dtH = r.dominant_tier||'LIGHT';
+    var dtColors={PROBE:'#ff8800',LIGHT:'#2a4a6a',NORMAL:'#1a5a3a',ACTIVE:'#0a6a2a',BULK:'#0a5a6a'};
+    html+='<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:'+(dtColors[dtH]||'#2a4a6a')+';color:#fff;margin-left:4px">'+esc(dtH)+'</span>';
+    html+='<span style="font-size:9px;color:#4a6a5a;margin-left:4px">avg '+fmt(r.pkts_avg||0)+'pkt</span>';
+    html+='</div>';
+
+    // ── Identity row: Src IP | Src Hostname | Src App | Src APM ID | Dest App ID ──
+    var ipam=r.ipam||{};
+    var destI=r.dest||{};
+
+    // Src App: prefer ENT dataset app name, fall back to IPAM app_acronyms
+    var srcAppDisp = r.src_app || (ipam.app_acronyms||'').split('|')[0].trim() || '';
+    // Src APM ID: prefer ENT apm_ids, fall back to IPAM
+    var srcApm = r.src_app ? (ipam.apm_ids||'').split('|')[0].trim() : (ipam.apm_ids||'').split('|')[0].trim();
+    // Dest App ID — v2.0: use friendlyDest() so the identity row shows
+    // "Akamai CDN", "Amazon EC2", "Azure Cloud" etc. instead of raw provider.
+    var destAppDisp = friendlyDest(destI) || '';
+    // If friendlyDest includes the provider, also surface a specific service
+    // name when available (e.g. "Google CDN — Europe" for regional breakdown).
+    var destSvcExtra = '';
+    if(destI.region && destI.svc_type){
+      destSvcExtra = destI.region;
+    }
+    var destSvcType = destI.svc_type || destI.ds_class || '';
+
+    html+='<div class="rh-ids">';
+
+    // Src IP + site code
+    var siteCode = r.src_site_code || '';
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Src IP'+(siteCode?' | '+esc(siteCode):'')+'</span>';
+    html+='<span class="id-val">'+esc(r.src_ip||'—')+'</span>';
+    html+='</div>';
+
+    // Src Hostname
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Src Hostname</span>';
+    if(r.hostname){
+      html+='<span class="id-val host" title="'+(r.fqdn||r.hostname)+'">'+esc(r.hostname)+'</span>';
+      if(r.ht_inferred){
+        html+='<span title="Location inferred from hostname translation ('+esc(r.ht_tier||'')+') — not from IPAM or ENT" '
+             +'style="font-size:8px;font-weight:700;padding:1px 4px;border-radius:2px;'
+             +'background:#1a2a00;color:#88cc44;margin-left:4px;vertical-align:middle">⟳ HT</span>';
+      }
+    } else if(r.collapsed_n && r.collapsed_n > 1){
+      // Collapsed /24 row — summarise host count; individual hosts listed in body
+      html+='<span class="id-val host" style="color:#8ac0ff" title="Click to expand for individual hosts">'
+           +r.collapsed_n+' hosts in /24</span>';
+    } else if(ipam.unregistered){
+      // Subnet not in IPAM — flag explicitly, not silently blank
+      html+='<span class="id-val none" style="color:#ff8833;font-style:normal;font-weight:600" '
+           +'title="Source subnet '+esc(r.src24||'')+'  is not registered in IPAM — investigate">⚠ Unregistered subnet</span>';
+    } else {
+      // No ENT match — show subnet type context from IPAM
+      var subnetCtx = '';
+      if(ipam.net_type)   subnetCtx = ipam.net_type;
+      if(ipam.infra_role && ipam.infra_role!=='Unknown') subnetCtx += (subnetCtx?' · ':'')+ipam.infra_role;
+      if(ipam.store_num)  subnetCtx += ' Store#'+ipam.store_num;
+      html+='<span class="id-val none" title="'+esc(subnetCtx||'not in host dataset')+'">'
+           +(subnetCtx ? esc(subnetCtx.substring(0,28)) : 'not in host dataset')+'</span>';
+    }
+    html+='</div>';
+
+    // Src Application + acronym — ENT match or IPAM app_subnet fallback
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Src Application</span>';
+    var appLabel  = r.src_app_acronym ? esc(r.src_app_acronym) : '';
+    var appFull   = srcAppDisp;
+    var ipamApps  = (ipam.apps_ipam||'').split('|').filter(function(a){return a.trim();});
+    var ipamApmId = (ipam.apm_ids||'').split('|').filter(function(a){return a.trim();})[0]||'';
+    if(appFull){
+      html+='<span class="id-val app" title="'+esc(appFull)+'">'+esc(appLabel||appFull.substring(0,20))+'</span>';
+    } else if(ipamApps.length){
+      // Fall back to IPAM app_subnet_index — show apps in this /24
+      html+='<span class="id-val" style="color:#8a70b0;font-size:10px" title="From app_subnet_index for '+esc(r.src24||'')+'">'
+           +esc(ipamApps.slice(0,3).join(' · '))
+           +(ipamApps.length>3?' +'+String(ipamApps.length-3):'')+'</span>';
+    } else {
+      html+='<span class="id-val none">unknown</span>';
+    }
+    html+='</div>';
+
+    // Src BU
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Business Unit</span>';
+    var buDisp = r.src_bu || (ipam.bu||'');
+    if(buDisp){
+      html+='<span class="id-val bu" title="'+esc(buDisp)+'">'+esc(buDisp.substring(0,20))+'</span>';
+    } else {
+      html+='<span class="id-val none">—</span>';
+    }
+    html+='</div>';
+
+    // Src Site / DC
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Site / DC</span>';
+    var siteDisp = r.src_site_name || r.src_dc_name || (ipam.site||ipam.location||'');
+    if(siteDisp){
+      html+='<span class="id-val site" title="'+esc(siteDisp)+'">'+esc(siteDisp.substring(0,22))+'</span>';
+    } else {
+      html+='<span class="id-val none">—</span>';
+    }
+    html+='</div>';
+
+    // Dest Provider / Service
+    html+='<div class="id-field">';
+    html+='<span class="id-lbl">Dest Service</span>';
+    if(destAppDisp && destAppDisp !== '?'){
+      html+='<span class="id-val dest-app" title="'+esc(destAppDisp)+(destSvcExtra?' — '+esc(destSvcExtra):'')+'">'+esc(destAppDisp)+'</span>';
+      if(destSvcExtra) html+='<span style="font-size:9px;color:#4a7a5a"> '+esc(destSvcExtra)+'</span>';
+      else if(destSvcType && !destAppDisp.includes(destSvcType)) html+='<span style="font-size:9px;color:#4a7a5a"> '+esc(destSvcType)+'</span>';
+    } else {
+      html+='<span class="id-val none">unclassified dest</span>';
+    }
+    html+='</div>';
+
+    html+='</div>'; // end rh-ids
+    html+='</div>'; // end rule-head
+    html+='<div class="risk-bar '+riskBarClass(r.risk)+'"></div>';
+    html+='<div class="rule-body" id="rb-'+idx+'"></div>';  // body built lazily on expand
+    html+='</div>'; // end rule-card
+    return html;
+} // end buildRuleHead
+
+// ── buildRuleBody — constructed on first expand, cached in the DOM ──────────
+function buildRuleBody(r){
+    var idx = r._i || 0;
+    var html = '';
+    var destInfo = r.dest || {};
+    var rc = riskColor(r.risk);
+
+    // Left column
+    html+='<div>';
+    html+='<div class="rb-label">Recommendation</div>';
+    html+='<div class="rb-rec">'+esc(r.reason)+'</div>';
+
+    // v2.0 — Collapsed hosts list (MONITOR /24 collapse)
+    if(r.collapsed_hosts && r.collapsed_hosts.length > 0){
+      html+='<div class="rb-label">Hosts in /24 <span style="color:#4a9acf;font-weight:400">('+r.collapsed_hosts.length+')</span></div>';
+      html+='<div style="background:#061018;border:1px solid #1a2a3a;border-radius:4px;padding:8px;margin-bottom:10px;max-height:260px;overflow-y:auto">';
+      html+='<table style="width:100%;border-collapse:collapse;font-size:10px;font-family:\'Courier New\',monospace">';
+      html+='<thead><tr style="color:#5a7a9a;font-size:9px;text-transform:uppercase;letter-spacing:.4px">';
+      html+='<th style="text-align:left;padding:3px 6px;border-bottom:1px solid #1a2a3a">IP</th>';
+      html+='<th style="text-align:left;padding:3px 6px;border-bottom:1px solid #1a2a3a">Hostname</th>';
+      html+='<th style="text-align:left;padding:3px 6px;border-bottom:1px solid #1a2a3a">App</th>';
+      html+='<th style="text-align:left;padding:3px 6px;border-bottom:1px solid #1a2a3a">Env</th>';
+      html+='<th style="text-align:right;padding:3px 6px;border-bottom:1px solid #1a2a3a">Sess</th>';
+      html+='<th style="text-align:right;padding:3px 6px;border-bottom:1px solid #1a2a3a">Pkts</th>';
+      html+='</tr></thead><tbody>';
+      for(var ci=0; ci<r.collapsed_hosts.length; ci++){
+        var h = r.collapsed_hosts[ci];
+        html+='<tr style="border-bottom:1px solid #0f1e2e">';
+        html+='<td style="padding:3px 6px;color:#79c0ff">'+esc(h.ip||'—')+'</td>';
+        html+='<td style="padding:3px 6px;color:#a8c8e8" title="'+esc(h.fqdn||h.hostname||'')+'">'
+             +(h.hostname ? esc(h.hostname) : '<span style="color:#3a5a7a;font-style:italic">—</span>')+'</td>';
+        html+='<td style="padding:3px 6px;color:#c8a8e8">'
+             +(h.app ? esc(String(h.app).substring(0,22)) : '<span style="color:#3a5a7a">—</span>')+'</td>';
+        html+='<td style="padding:3px 6px;color:#70c870">'+esc(h.env||'')+'</td>';
+        html+='<td style="padding:3px 6px;text-align:right;color:#4a9a8a">'+fmt(h.count||0)+'</td>';
+        html+='<td style="padding:3px 6px;text-align:right;color:#6a8a7a">'+fmt(h.pkts||0)+'</td>';
+        html+='</tr>';
+      }
+      html+='</tbody></table>';
+      html+='</div>';
+    }
+
+    html+='<div class="rb-label">PA Policy Rule Specification</div>';
+    html+=ruleSpec(r);
+
+    // Source host record — rich host identity card
+    var ipam=r.ipam||{};
+    // Heritage badge
+    var heritageBadge = '';
+    if(r.src_heritage==='CVS')   heritageBadge='<span class="hbadge hb-cvs">CVS</span> ';
+    else if(r.src_heritage==='AETNA') heritageBadge='<span class="hbadge hb-aetna">AETNA</span> ';
+    else if(r.src_heritage==='HCB')   heritageBadge='<span class="hbadge hb-hcb">HCB</span> ';
+    // Data source badges
+    var dsBadges='';
+    if((r.src_in_snow||r.src_data_sources||'').indexOf('SNOW')>=0)   dsBadges+='<span class="dsrc-badge dsrc-snow">SNOW</span>';
+    if((r.src_in_qualys||r.src_data_sources||'').indexOf('Y')===0||(r.src_data_sources||'').indexOf('Qualys')>=0) dsBadges+='<span class="dsrc-badge dsrc-ql">QUALYS</span>';
+    if((r.src_in_wiz||r.src_data_sources||'').indexOf('ADL')>=0||(r.src_data_sources||'').indexOf('ADL')>=0) dsBadges+='<span class="dsrc-badge dsrc-adl">ADL</span>';
+    if((r.src_in_wiz||'').indexOf('Y')===0) dsBadges+='<span class="dsrc-badge dsrc-wiz">WIZ</span>';
+    html+='<div class="rb-label">Source Host — '+esc(r.src_ip||r.src24)+'</div>';
+    html+='<div class="src-chip">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    html+='<span class="sc-cidr" style="margin:0">'+esc(r.src_ip||r.src24)+compliancePills(ipam)+'</span>';
+    html+=heritageBadge+dsBadges;
+    html+='</div>';
+    html+='<div class="src-host-grid">';
+    // Col 1
+    html+='<div>';
+    if(r.hostname){
+      html+='<div class="shg-field"><span class="shg-label">Hostname</span>';
+      html+='<span class="shg-val" style="color:#79c0ff">'+esc(r.hostname)+'</span></div>';
+    }
+    if(r.fqdn && r.fqdn!==r.hostname){
+      html+='<div class="shg-field"><span class="shg-label">FQDN</span>';
+      html+='<span class="shg-val" style="color:#5a8acf;font-size:9px">'+esc(r.fqdn.substring(0,50))+'</span></div>';
+    }
+    if(r.src_os){
+      html+='<div class="shg-field"><span class="shg-label">OS</span>';
+      html+='<span class="shg-val">'+esc(r.src_os)+(r.src_os_detail&&r.src_os_detail!==r.src_os?' · <span style="color:#5a7a9a;font-size:9px">'+esc(r.src_os_detail.substring(0,30))+'</span>':'')+'</span></div>';
+    }
+    if(r.src_server_class){
+      html+='<div class="shg-field"><span class="shg-label">Class</span>';
+      html+='<span class="shg-val" style="color:#8a9acf">'+esc(r.src_server_class)+'</span></div>';
+    }
+    if(r.src_env){
+      html+='<div class="shg-field"><span class="shg-label">Environment</span>';
+      html+='<span class="shg-val"><span class="id-val env">'+esc(r.src_env)+'</span></span></div>';
+    }
+    html+='</div>';
+    // Col 2
+    html+='<div>';
+    if(r.src_app){
+      html+='<div class="shg-field"><span class="shg-label">Application</span>';
+      html+='<span class="shg-val" style="color:#c8a8e8">'+esc((r.src_app_acronym||r.src_app).substring(0,30))+'</span></div>';
+      if(r.src_app_acronym && r.src_app!==r.src_app_acronym){
+        html+='<div class="shg-field"><span class="shg-label">Full Name</span>';
+        html+='<span class="shg-val" style="color:#9a80c0;font-size:9px">'+esc(r.src_app.substring(0,50))+'</span></div>';
+      }
+    }
+    if(r.src_apm_ids){
+      html+='<div class="shg-field"><span class="shg-label">APM ID(s)</span>';
+      html+='<span class="shg-val" style="color:#4a9a8a">'+esc(r.src_apm_ids.split('|').slice(0,3).join(' | '))+'</span></div>';
+    }
+    if(r.src_bu){
+      html+='<div class="shg-field"><span class="shg-label">Business Unit</span>';
+      html+='<span class="shg-val" style="color:#c8a060">'+esc(r.src_bu.substring(0,40))+'</span></div>';
+    }
+    if(r.src_site_name||r.src_dc_name){
+      html+='<div class="shg-field"><span class="shg-label">Site / DC</span>';
+      html+='<span class="shg-val" style="color:#60a8c8">'+esc(r.src_site_name||r.src_dc_name)+'</span></div>';
+    }
+    if(r.src_csna){
+      html+='<div class="shg-field"><span class="shg-label">CSNA Hostgroup</span>';
+      html+='<span class="shg-val" style="color:#7ee787;font-size:9px">'+esc(r.src_csna)+'</span></div>';
+    }
+    html+='</div>';
+    html+='</div>'; // end grid
+    html+='</div>'; // end chip
+
+    // /24 subnet IPAM context below
+    html+='<div class="rb-label">Subnet Context — '+esc(r.src24)+'</div>';
+    html+='<div class="src-chip">';
+    if(ipam.unregistered){
+      html+='<div class="sc-meta" style="background:#2a1500;border:1px solid #ff8833;border-radius:4px;padding:8px 10px;margin-bottom:4px">'
+           +'<span style="color:#ff8833;font-weight:700;font-size:12px">⚠ UNREGISTERED SUBNET</span>'
+           +'<div style="color:#cc8833;font-size:10px;margin-top:4px">'+esc(r.src24)+'  is not registered in the IPAM dataset.</div>'
+           +'<div style="color:#cc8833;font-size:10px;margin-top:2px">This is shadow IT, rogue infrastructure, or a gap in IPAM coverage. '
+           +'Add this subnet to all_IP_networks before the next report run.</div>'
+           +'</div>';
+    } else if(ipam.ht_inferred){
+      html+='<div class="sc-meta" style="background:#0a1a00;border:1px solid #88cc44;border-radius:4px;padding:6px 10px;margin-bottom:4px">'
+           +'<span style="color:#88cc44;font-weight:700;font-size:10px">⟳ Location inferred from hostname translation</span>'
+           +'<div style="color:#5a8a3a;font-size:9px;margin-top:2px">Tier: '+esc(ipam.ht_tier||'')
+           +' · Hostname: '+esc(ipam.ht_hostname||r.hostname||'')+'</div>'
+           +'<div style="color:#5a8a3a;font-size:9px">No IPAM record for this subnet. Location is a best-effort inference — '
+           +'verify and register subnet in all_IP_networks.</div>'
+           +'</div>';
+    } else {
+      if(ipam.site)    html+='<div class="sc-meta"><b>Site:</b> '+esc(ipam.site)+'</div>';
+      if(ipam.location)html+='<div class="sc-meta"><b>Location:</b> '+esc(ipam.location)+'</div>';
+      if(ipam.facility)html+='<div class="sc-meta"><b>Facility:</b> '+esc(ipam.facility)+
+                             (ipam.net_type?' | Net Type: '+esc(ipam.net_type):'')+'</div>';
+      if(ipam.owner)   html+='<div class="sc-meta"><b>Owner:</b> '+esc(ipam.owner)+
+                             (ipam.bu?' | BU: '+esc(ipam.bu):'')+'</div>';
+      if(ipam.apps_ipam||ipam.apm_ids){
+        var appDisp = ipam.apps_ipam ? ipam.apps_ipam.split('|').slice(0,5).join(' · ') : '';
+        html+='<div class="sc-meta"><b>Apps (IPAM):</b> <span style="color:#c8a8e8">'+esc(appDisp.substring(0,100))+'</span></div>';
+      }
+      if(ipam.app_names&&ipam.app_names!==ipam.apps_ipam){
+        html+='<div class="sc-meta" style="font-size:9px;color:#7a6a9a">'+esc(ipam.app_names.substring(0,120))+'</div>';
+      }
+      if(ipam.apm_ids){
+        html+='<div class="sc-meta"><b>APM IDs:</b> <span style="color:#4a9a8a;font-size:10px">'+esc(ipam.apm_ids.split('|').slice(0,5).join(' | '))+'</span></div>';
+      }
+      if(ipam.prod_apps){
+        var prodStr = ipam.prod_apps+' prod apps';
+        if(ipam.app_envs) prodStr += ' · '+ipam.app_envs;
+        html+='<div class="sc-meta"><b>App Count:</b> '+esc(prodStr)+'</div>';
+      }
+      if(ipam.pci_mixed==='Y'){
+        html+='<div class="sc-meta"><span style="color:#ff8800;font-weight:700">⚠ PCI MIXED SUBNET</span></div>';
+      }
+      if(ipam.sox==='Y') html+='<div class="sc-meta"><span style="color:#ff6600">SOX Critical</span></div>';
+      if(ipam.hitrust==='Y') html+='<div class="sc-meta"><span style="color:#6688cc">HITRUST</span></div>';
+      if(ipam.routing) html+='<div class="sc-meta"><b>Routing Domain:</b> '+esc(ipam.routing)+'</div>';
+      if(ipam.cpc_svc) html+='<div class="sc-meta"><b>CPC Services:</b> '+esc(ipam.cpc_svc.substring(0,80))+'</div>';
+    }
+    html+='</div>';
+    html+='</div>';
+
+
+    // Right column
+    html+='<div>';
+    html+='<div class="rb-label">Destination — Identity &amp; Geography</div>';
+    html+='<div class="src-chip">';
+    var destHighRisk = r.dest_high_risk==='Y';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    html+='<span class="sc-cidr" style="margin:0;color:'+(destHighRisk?'#ff7777':(r.dest_cpc_match==='Y'?'#88ffaa':'#a8d8a8'))+'">'+esc(r.dest_ip)+'</span>';
+    if(destHighRisk) html+='<span style="font-size:9px;font-weight:700;color:#ff5555;background:#3a0a0a;padding:1px 6px;border-radius:3px">⚠ HIGH-RISK COUNTRY</span>';
+    if(r.dest_cpc_match==='Y') html+='<span style="font-size:9px;font-weight:700;color:#88ffaa;background:#0a2a1a;padding:1px 6px;border-radius:3px">✓ CPC: '+esc(r.dest_cpc_service)+'</span>';
+    if(r.dest_is_bogon) html+='<span style="font-size:9px;font-weight:700;color:#ff4444;background:#3a0000;padding:1px 6px;border-radius:3px">⛔ '+esc(r.dest_ip_rfc)+' VIOLATION</span>';
+    html+='</div>';
+    html+='<div class="src-host-grid">';
+    // Col 1: provider + service
+    html+='<div>';
+    if(destInfo.provider&&destInfo.provider!=='Unknown'){
+      html+='<div class="shg-field"><span class="shg-label">Provider / Org</span>';
+      html+=providerBadge(destInfo.provider,'')+'</div>';
+    } else {
+      html+='<div class="shg-field"><span class="shg-label">Provider / Org</span>';
+      html+='<span style="color:#ff8833;font-size:10px">⚠ Unknown — investigate</span></div>';
+    }
+    if(destInfo.service){
+      html+='<div class="shg-field"><span class="shg-label">Service</span>';
+      html+='<span class="shg-val" style="color:#6ab87a">'+esc(destInfo.service)+'</span></div>';
+    }
+    if(destInfo.svc_label||destInfo.svc_type){
+      html+='<div class="shg-field"><span class="shg-label">Service Type</span>';
+      html+='<span class="shg-val" style="color:#5a9a6a">'+esc(destInfo.svc_label||destInfo.svc_type)+'</span></div>';
+    }
+    if(r.dest_description){
+      html+='<div class="shg-field"><span class="shg-label">Description</span>';
+      html+='<span class="shg-val" style="color:#4a7a5a;font-size:9px">'+esc(r.dest_description.substring(0,60))+'</span></div>';
+    }
+    if(destInfo.ds_class){
+      html+='<div class="shg-field"><span class="shg-label">Dataset Class</span>';
+      html+='<span class="shg-val" style="color:#3a7a4a">'+esc(destInfo.ds_class)+'</span></div>';
+    }
+    html+='</div>';
+    // Col 2: geo + ASN
+    html+='<div>';
+    // ── Bogon/RFC violation alert ────────────────────────────────────────────
+    if(r.dest_is_bogon){
+      html+='<div style="background:#3a0000;border:1px solid #ff4444;border-radius:4px;padding:6px 10px;margin-bottom:6px">';
+      html+='<div style="color:#ff4444;font-weight:700;font-size:11px">⛔ RFC ADDRESS SPACE VIOLATION</div>';
+      html+='<div style="color:#ff8888;font-size:10px;margin-top:2px">'
+           +esc(r.dest_ip_rfc||'')+' — '+esc(r.dest_ip_space||'')+' address in outside zone.</div>';
+      html+='<div style="color:#ff6666;font-size:10px">Route leak / NAT failure / spoofed packet — investigate immediately.</div>';
+      html+='</div>';
+    }
+    // ── Country + high-risk ───────────────────────────────────────────────────
+    if(r.dest_country){
+      html+='<div class="shg-field"><span class="shg-label">Country</span>';
+      html+='<span class="shg-val" style="color:'+(destHighRisk?'#ff7777':'#c8d8e8')+'">'+esc(r.dest_country)+' — '+esc(r.dest_country_name||'')+'</span>';
+      if(destHighRisk&&r.dest_risk_reason) html+='<span style="font-size:9px;color:#ff5555;display:block">'+esc(r.dest_risk_reason)+'</span>';
+      html+='</div>';
+    }
+    // ── City / State — always show if available ───────────────────────────────
+    var locParts = [r.dest_city, r.dest_us_state].filter(function(x){return x&&x.trim();});
+    if(locParts.length){
+      html+='<div class="shg-field"><span class="shg-label">Location</span>';
+      html+='<span class="shg-val" style="color:#8aaacf">'+esc(locParts.join(', '))+'</span></div>';
+    } else if(destInfo.region){
+      html+='<div class="shg-field"><span class="shg-label">Region</span>';
+      html+='<span class="shg-val" style="color:#8aaacf">'+esc(destInfo.region)+'</span></div>';
+    }
+    // ── ASN + Org — always show ───────────────────────────────────────────────
+    if(r.dest_asn||r.dest_as_name){
+      html+='<div class="shg-field"><span class="shg-label">ASN</span>';
+      html+='<span class="shg-val" style="color:#7090b0;font-size:10px">'+esc(r.dest_asn||'')+'</span></div>';
+    }
+    if(r.dest_as_name){
+      html+='<div class="shg-field"><span class="shg-label">Org</span>';
+      html+='<span class="shg-val" style="color:#8aaacf;font-size:10px">'+esc(r.dest_as_name.substring(0,50))+'</span></div>';
+    } else if(r.dest_asn_display){
+      html+='<div class="shg-field"><span class="shg-label">ASN / Org</span>';
+      html+='<span class="shg-val" style="color:#7090b0;font-size:10px">'+esc(r.dest_asn_display.substring(0,50))+'</span></div>';
+    }
+    html+='</div>';
+    html+='</div>'; // end grid
+    html+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a2a3a;display:flex;gap:12px">';
+    html+='<a href="https://rdap.arin.net/registry/ip/'+esc(r.dest_ip)+'" target="_blank" style="color:#4ab;font-size:10px">ARIN RDAP →</a>';
+    html+='<a href="https://www.shodan.io/host/'+esc(r.dest_ip)+'" target="_blank" style="color:#4ab;font-size:10px">Shodan →</a>';
+    html+='<a href="https://bgpview.io/ip/'+esc(r.dest_ip)+'" target="_blank" style="color:#4ab;font-size:10px">BGPView →</a>';
+    html+='<a href="https://www.virustotal.com/gui/ip-address/'+esc(r.dest_ip)+'" target="_blank" style="color:#c4a;font-size:10px">VirusTotal →</a>';
+    html+='</div>';
+    html+='</div>'; // end chip
+    html+='<div class="rb-label">Session Details</div>';
+    html+='<div class="sc-chip"><div class="sc-meta">';
+    // Traffic tier badge
+    var tierColors = {PROBE:'#ff8800',LIGHT:'#5a7a9a',NORMAL:'#4a8a6a',ACTIVE:'#3a9a4a',BULK:'#2a7a8a'};
+    var tierDescs  = {
+      PROBE: 'PROBE — PA app-inspection / TCP handshake only. Verify this is real traffic before creating rule.',
+      LIGHT: 'LIGHT — minimal data exchange (6–20 packets)',
+      NORMAL:'NORMAL — standard interactive session (21–100 packets)',
+      ACTIVE:'ACTIVE — sustained data transfer (101–1,000 packets)',
+      BULK:  'BULK — high-volume transfer (>1,000 packets). Verify authorised.'
+    };
+    var dt = r.dominant_tier || 'LIGHT';
+    var tc = tierColors[dt] || '#5a7a9a';
+    html+='<div style="margin-bottom:6px">';
+    html+='<span style="background:'+tc+';color:#fff;font-weight:700;font-size:10px;padding:2px 8px;border-radius:3px;margin-right:6px">'+esc(dt)+'</span>';
+    html+='<span style="color:'+tc+';font-size:10px">'+esc(tierDescs[dt]||'')+'</span>';
+    html+='</div>';
+    // Tier distribution breakdown if mixed
+    if(r.traffic_tiers && Object.keys(r.traffic_tiers).length > 1){
+      var tierParts = Object.entries(r.traffic_tiers).map(function(kv){
+        return kv[1]+'× '+kv[0];
+      }).join('  ');
+      html+='<div style="font-size:9px;color:#5a7a9a;margin-bottom:4px">Tier mix: '+esc(tierParts)+'</div>';
+    }
+    html+='<b>Sessions:</b> '+fmt(r.count)+'  <span style="font-size:10px;color:#6a8a7a">avg '+fmt(r.pkts_avg||0)+' pkts/session</span><br>';
+    html+='<b>Packets:</b> out='+fmt(r.pkts_out)+' in='+fmt(r.pkts_in)+'  total='+fmt((r.pkts_out||0)+(r.pkts_in||0))+'<br>';
+    html+='<b>End reason(s):</b> '+esc((r.end_reasons||[]).join(', '))+'<br>';
+    html+='<b>PA app(s):</b> '+esc((r.apps||[]).join(', '))+'<br>';
+    html+='<b>Device(s):</b> '+esc((r.devices||[]).join(', '))+'<br>';
+    html+='</div></div>';
+
+    html+='<div class="rb-label">Port Assessment</div>';
+    html+='<div class="rb-rec" style="border-color:'+rc+';background:#0a0a1a">'+esc(r.port_note)+'</div>';
+    html+='</div>';
+
+    return html;
+}  // end buildRuleBody
+
+// ── toggleRule — build body HTML on first expand, then just toggle class ───
+function toggleRule(idx){
+  var card = document.getElementById('rc-'+idx);
+  var body = document.getElementById('rb-'+idx);
+  if(!card || !body) return;
+  if(!body._built){
+    var target = null;
+    var arr = _ruleState.rules;
+    for(var i=0;i<arr.length;i++){ if(arr[i]._i === idx){ target = arr[i]; break; } }
+    if(!target && D && D.rules){
+      for(var j=0;j<D.rules.length;j++){ if(D.rules[j]._i === idx){ target = D.rules[j]; break; } }
+    }
+    if(target){
+      body.innerHTML = buildRuleBody(target);
+      body._built = true;
+    }
+  }
+  var exp = card.classList.toggle('expanded');
+  body.classList.toggle('open', exp);
+}
+
+function renderPorts(ports){
+  var maxC=ports.length?ports[0].count:1;
+  var html='';
+  ports.forEach(function(p){
+    var rc=riskColor(p.risk);
+    var pct=Math.round(100*p.count/maxC);
+    html+='<tr>';
+    html+='<td><span class="port-num" style="color:'+rc+'">'+p.port+'</span></td>';
+    html+='<td><span style="color:#a8c8e8">'+esc(p.svc)+'</span></td>';
+    html+='<td><span class="risk-badge rb-'+p.risk+'">'+p.risk+'</span></td>';
+    html+='<td class="mono">'+fmt(p.count)+'</td>';
+    html+='<td><div class="port-bar-wrap"><div class="port-bar-fill" style="width:'+pct+'%;background:'+rc+'"></div></div></td>';
+    html+='<td><span style="color:#6888a8;font-size:10px">'+esc(p.note)+'</span></td>';
+    html+='</tr>';
+  });
+  document.getElementById('port-tbody').innerHTML=html;
+}
+
+function renderSrcIPs(src24){
+  // Count total unique IPs across all subnets
+  var totalIPs=0;
+  src24.forEach(function(s){totalIPs+=s.src_n;});
+  document.getElementById('src-cnt').textContent=totalIPs+' IPs across '+src24.length+' subnets';
+
+  var html='';
+  src24.forEach(function(s,idx){
+    var portPills=s.ports.slice(0,6).map(function(p){return '<span class="port-pill">'+p+'</span>';}).join('');
+    var pciTag=s.pci&&s.pci.indexOf('PCI')>=0?'<span class="sc-compliance sc-pci">PCI</span>':'';
+    var siteStr = s.site || s.location || '';
+    var metaStr = [s.facility, s.owner||s.bu].filter(Boolean).join(' · ');
+    var hostsWithName = (s.ip_hosts||[]).filter(function(h){return h.hostname;}).length;
+    var hostPct = s.src_n ? Math.round(100*hostsWithName/s.src_n) : 0;
+
+    html += '<div class="subnet-group">';
+    html += '<div class="sg-header" onclick="toggleSG('+idx+')">';
+    html += '<span class="sg-cidr">'+esc(s.cidr)+'</span>';
+    html += pciTag;
+    if(s.unregistered){
+      html += '<span class="sg-site" style="color:#ff8833;font-weight:600">⚠ Not in IPAM</span>';
+    } else {
+      html += '<span class="sg-site">'+esc(siteStr)+(metaStr?' &nbsp;·&nbsp; '+esc(metaStr):'')+'</span>';
+    }
+    html += '<span class="sg-meta">'+s.src_n+' IPs &nbsp;·&nbsp; '+s.count+' sessions';
+    if(hostsWithName) html += ' &nbsp;·&nbsp; <span style="color:#3a7a3a">'+hostsWithName+' hostnames</span>';
+    html += '</span>';
+    html += '<span style="font-size:10px;color:#2a4a6a">'+portPills+'</span>';
+    html += '<span class="sg-toggle" id="sg-arrow-'+idx+'">▶</span>';
+    html += '</div>';
+
+    // IP list — collapsed by default
+    html += '<div class="sg-ips" id="sg-ips-'+idx+'">';
+    // Subnet IPAM summary row
+    html += '<div style="padding:6px 14px;background:#08101c;border-bottom:1px solid #1a2a3a;font-size:10px;color:#5a7a9a">';
+    if(s.unregistered){
+      html += '<span style="color:#ff8833;font-weight:600">Subnet '+esc(s.cidr)+' has no IPAM entry.</span>'
+        +' <span style="color:#886633">Register in all_IP_networks to assign location, owner, and app context.</span>';
+    } else {
+      if(s.routing)   html += '<b>Routing:</b> '+esc(s.routing)+' &ensp;';
+      if(s.net_type)  html += '<b>Net Type:</b> '+esc(s.net_type)+' &ensp;';
+      if(s.compliance)html += '<b>Compliance:</b> '+esc(s.compliance.substring(0,40))+' &ensp;';
+      if(s.apps_ipam) html += '<b>Apps (IPAM):</b> '+esc(s.apps_ipam.substring(0,60));
+    }
+    html += '</div>';
+    // Individual IP rows
+    (s.ip_hosts||[]).forEach(function(h){
+      // Heritage + data source badges
+      var hb='';
+      if(h.heritage==='CVS')   hb='<span class="hbadge hb-cvs">CVS</span> ';
+      else if(h.heritage==='AETNA') hb='<span class="hbadge hb-aetna">AETNA</span> ';
+      else if(h.heritage==='HCB')   hb='<span class="hbadge hb-hcb">HCB</span> ';
+      var ds='';
+      if((h.in_snow||h.data_sources||'').indexOf('SNOW')>=0||h.in_snow==='Y') ds+='<span class="dsrc-badge dsrc-snow">SNOW</span>';
+      if(h.in_qualys==='Y'||(h.data_sources||'').indexOf('ADL')>=0) ds+='<span class="dsrc-badge dsrc-adl">ADL</span>';
+      if(h.in_wiz==='Y') ds+='<span class="dsrc-badge dsrc-wiz">WIZ</span>';
+      html+='<div class="ip-row">';
+      html+='<span class="ip-addr">'+esc(h.ip)+'</span>';
+      if(h.hostname){
+        html+='<span class="ip-host" title="'+(h.fqdn||h.hostname)+'">'+esc(h.hostname)+'</span>';
+      } else {
+        html+='<span class="ip-host ip-no-host">no hostname record</span>';
+      }
+      html+='<span class="ip-os">'+esc(h.os||'—')+'</span>';
+      html+='<span class="ip-app" title="'+esc(h.app||'')+'">'+esc((h.app_acronym||h.app||'').substring(0,40)||'—')+'</span>';
+      if(h.env) html+='<span class="ip-env">'+esc(h.env)+'</span>';
+      if(h.bu)  html+='<span style="font-size:9px;color:#c8a060;margin-left:4px">'+esc(h.bu.substring(0,20))+'</span>';
+      html+=hb+ds;
+      html+='</div>';
+      if(h.csna_path||h.apm_ids||h.dc_name){
+        html+='<div style="padding:1px 14px 4px 134px;font-size:9px;display:flex;gap:14px">';
+        if(h.csna_path) html+='<span class="ip-csna">'+esc(h.csna_path)+'</span>';
+        if(h.apm_ids)   html+='<span style="color:#4a9a8a">'+esc(h.apm_ids.split('|')[0].trim())+'</span>';
+        if(h.dc_name)   html+='<span style="color:#60a8c8">'+esc(h.dc_name)+'</span>';
+        html+='</div>';
+      }
+    });
+    html+='</div>';
+    html+='</div>';
+  });
+  if(!html) html='<div style="padding:20px;color:#4a6a8a">No source data.</div>';
+  document.getElementById('src-list').innerHTML=html;
+}
+
+function toggleSG(idx){
+  var ips=document.getElementById('sg-ips-'+idx);
+  var arr=document.getElementById('sg-arrow-'+idx);
+  var open=ips.classList.toggle('open');
+  arr.classList.toggle('open',open);
+}
+
+function renderDests(dests){
+  document.getElementById('dest-cnt').textContent=dests.length;
+  var html='';
+  dests.forEach(function(d){
+    var portPills=d.ports.slice(0,6).map(function(p){return '<span class="port-pill">'+p+'</span>';}).join('');
+    var actions='<a href="https://rdap.arin.net/registry/ip/'+esc(d.ip)+'" target="_blank" style="color:#4ab;font-size:10px">ARIN</a> ';
+    actions+='<a href="https://www.shodan.io/host/'+esc(d.ip)+'" target="_blank" style="color:#4ab;font-size:10px">Shodan</a>';
+    html+='<tr>';
+    // Country flag + risk indicator
+    var ccDisp = d.country_code ? d.country_code : '';
+    var riskFlag = (d.is_high_risk==='Y') ? ' <span style="color:#ff5555;font-size:9px;font-weight:700">⚠ HIGH-RISK</span>' : '';
+    var countryDisp = ccDisp ? esc(ccDisp)+(d.country_name?' '+esc(d.country_name.substring(0,20)):'') : '—';
+    var asnDisp = d.asn_display ? esc(d.asn_display.substring(0,35)) : (d.provider!=='Unknown'?esc(d.provider):'—');
+    var cityDisp = d.city ? esc(d.city) : (d.region ? esc(d.region.substring(0,20)) : '—');
+    var svcDisp = d.service || (d.svc_label&&d.svc_label!=='Cloud Infrastructure'?d.svc_label:'') || d.description || (d.provider!=='Unknown'?d.svc_label:'') || '—';
+    var classColor = d.ds_class==='UNKNOWN'?'#ff8833':d.ds_class==='EXTERNAL'?'#aa88ff':'#44cc44';
+    html+='<tr style="'+(d.is_high_risk==='Y'?'background:#1a0808':'')+'">';
+    html+='<td class="mono" style="color:'+(d.is_high_risk==='Y'?'#ff7777':'#a8d8a8')+'">'+esc(d.ip)+'</td>';
+    html+='<td>'+providerBadge(d.provider,'')+'</td>';
+    html+='<td style="font-size:10px;color:#6888a8">'+esc(svcDisp.substring(0,30))+'</td>';
+    html+='<td style="font-size:10px;color:#70a8c8">'+countryDisp+riskFlag+'</td>';
+    html+='<td style="font-size:9px;color:#7090a8">'+cityDisp+'</td>';
+    html+='<td style="font-size:9px;color:#507090">'+asnDisp+'</td>';
+    html+='<td><span class="risk-badge" style="background:#0a1a0a;color:'+classColor+';border:1px solid '+classColor+40+'">'+esc(d.ds_class)+'</span></td>';
+    html+='<td class="mono" style="color:#4a9a8a">'+fmt(d.count)+'</td>';
+    html+='<td class="mono">'+fmt(d.src_n)+'</td>';
+    html+='<td>'+portPills+'</td>';
+    html+='<td>'+actions+'</td>';
+    html+='</tr>';
+  });
+  document.getElementById('dest-tbody').innerHTML=html;
+}
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-pill').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    curAction=btn.getAttribute('data-action')||'';
+    renderRules();
+  });
+});
+// v2.0 — debounced search (250ms) replaces the per-keystroke full re-render
+document.getElementById('rule-search').addEventListener('input', debounce(function(){
+  curRuleSearch=this.value.trim(); renderRules();
+}, 250));
+
+
+
+// ── Source Locations ──────────────────────────────────────────────────────────────────────────────
+var _locRendered = false;
+function renderLocBreakdown(){
+  if(_locRendered) return;
+  _locRendered = true;
+  var loc = D.loc_breakdown || [];
+  var el  = document.getElementById('loc-list');
+  if(!loc.length){ el.innerHTML='<p style="color:#5a7a9a;font-size:11px">No location data available.</p>'; return; }
+
+  var typeColors = {
+    'CVS-DC':'cvs-dc','AETNA-DC':'aetna-dc','COLO':'colo','Corporate':'corporate',
+    'Mail-Order':'mail-order','Call-Center':'call-center','Specialty':'specialty',
+    'HCB':'hcb','Retail':'retail','Cloud':'cloud','Offshore':'offshore',
+    'Remote':'remote','Unknown':'unknown','Unregistered':'unregistered'
+  };
+
+  var totalSites = loc.reduce(function(s,t){return s+t.sites;},0);
+  document.getElementById('loc-cnt').textContent = loc.length+' types · '+totalSites+' sites';
+
+  var html = '';
+  loc.forEach(function(t, ti){
+    var tc  = typeColors[t.type] || 'unknown';
+    var tid = 'lt-'+ti;
+    html += '<div style="margin-bottom:4px">'
+      +'<div onclick="toggleLocType(&apos;'+tid+'&apos;)" '
+      +'style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0d1a2e;border-radius:4px;cursor:pointer">'
+      +'<span id="arr-'+tid+'" style="font-size:10px;color:#3a5a7a;display:inline-block;transition:transform .15s">▶</span>'
+      +'<span class="lt-badge lt-'+tc+'">'+esc(t.type)+'</span>'
+      +'<span style="font-size:11px;color:#c8d8e8;font-weight:600">'+t.sites+' site'+(t.sites!==1?'s':'')+'</span>'
+      +(t.review>0?'<span style="font-size:9px;color:#ff8833;margin-left:6px">'+t.review+' REVIEW</span>':'')
+      +(t.pci_rules>0?'<span style="font-size:9px;color:#ff4444;margin-left:4px">⚠ PCI</span>':'')
+      +'</div>'
+      +'<div id="'+tid+'" style="display:none;margin-left:16px;border-left:2px solid #1a2a3a;padding-left:12px;padding-top:4px">';
+
+    t.sites_data.forEach(function(s, si){
+      var sid = tid+'-s'+si;
+      html += '<div style="margin-bottom:4px">'
+        +'<div onclick="toggleLocSite(&apos;'+sid+'&apos;)" '
+        +'style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#080f1a;border-radius:3px;cursor:pointer">'
+        +'<span id="sarr-'+sid+'" style="font-size:9px;color:#3a5a7a;display:inline-block;transition:transform .15s">▶</span>'
+        +'<span style="font-size:11px;color:#8aaacf">'+esc(s.site)+'</span>'
+        +'<span style="font-size:10px;color:#3a5a7a">'+s.subnets.length+' subnet'+(s.subnets.length!==1?'s':'')+'</span>'
+        +(s.review>0?'<span style="font-size:9px;color:#ff8833">'+s.review+' review</span>':'')
+        +'</div>'
+        +'<div id="subs-'+sid+'" style="display:none;margin-left:14px;border-left:1px solid #1a2a3a;padding:4px 0 4px 10px">';
+      s.subnets.forEach(function(sub){
+        html += '<div style="font-family:\'Courier New\',monospace;font-size:10px;color:#5a7a9a;padding:2px 0">'
+          +esc(sub.cidr||'')+'</div>';
+      });
+      html += '</div></div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  el.innerHTML = html;
+
+  // Show download button if there are unregistered subnets
+  var hasUnreg = (D.loc_breakdown||[]).some(function(t){ return t.type === 'Unregistered'; });
+  var btn = document.getElementById('btn-unreg-csv');
+  if(btn) btn.style.display = hasUnreg ? 'inline-block' : 'none';
+}
+
+function downloadUnregisteredCSV(){
+  if(!D||!D.src24) return;
+  var rows = [['CIDR','SRC_IP_COUNT','SESSION_COUNT','RULE_COUNT','REVIEW_RULES',
+               'ALLOW_RULES','TOP_APPS','TOP_DEST_PORTS','TOP_DEST_PROVIDERS','RECOMMENDATION']];
+
+  // Gather per-CIDR stats from rules where the IPAM lookup is unregistered
+  var perCidr = {};
+  (D.rules||[]).forEach(function(r){
+    var ipam = r.ipam || {};
+    if(ipam && !ipam.unregistered) return;  // skip registered
+    var cidr = r.src24 || '';
+    if(!cidr) return;
+    if(!perCidr[cidr]) perCidr[cidr] = {ips:{},sess:0,rules:0,review:0,allow:0,apps:{},ports:{},provs:{}};
+    var sd = perCidr[cidr];
+    sd.sess  += r.count||0;
+    sd.rules += 1;
+    if(r.action==='REVIEW') sd.review++;
+    if(r.action==='ALLOW')  sd.allow++;
+    if(r.src_ip) sd.ips[r.src_ip]=1;
+    (r.collapsed_hosts||[]).forEach(function(h){ if(h.ip) sd.ips[h.ip]=1; });
+    (r.apps||[]).forEach(function(a){ if(a) sd.apps[a]=(sd.apps[a]||0)+(r.count||1); });
+    if(r.dest_port) sd.ports[r.dest_port]=(sd.ports[r.dest_port]||0)+(r.count||1);
+    var prov = getDest(r).provider||'';
+    if(prov) sd.provs[prov]=(sd.provs[prov]||0)+(r.count||1);
+  });
+
+  function topN(obj, n){
+    return Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,n).join('|');
+  }
+
+  Object.keys(perCidr).sort(function(a,b){
+    return perCidr[b].sess - perCidr[a].sess;
+  }).forEach(function(cidr){
+    var sd = perCidr[cidr];
+    rows.push([
+      cidr,
+      Object.keys(sd.ips).length,
+      sd.sess, sd.rules, sd.review, sd.allow,
+      topN(sd.apps,5), topN(sd.ports,5), topN(sd.provs,3),
+      sd.review>0 ? 'URGENT — REVIEW traffic' : 'Register in all_IP_networks'
+    ]);
+  });
+
+  if(rows.length <= 1){ alert('No unregistered subnets found in this report.'); return; }
+
+  var csv = rows.map(function(r){
+    return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+  }).join('\r\n');
+
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'unregistered_subnets.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function downloadUnknownHostsCSV(){
+  if(!D||!D.rules) return;
+  var rows = [['IP','SRC_CIDR','IPAM_LOCATION','IPAM_NET_TYPE','SUBNET_REGISTERED',
+               'SESSION_COUNT','RULE_COUNT','REVIEW_RULES','ALLOW_RULES',
+               'TOP_APPS','TOP_DEST_PORTS','TOP_DEST_PROVIDERS','RECOMMENDATION']];
+
+  var perIp = {};
+
+  function enrich(ip, r, hostSessions){
+    if(!ip) return;
+    if(!perIp[ip]) perIp[ip] = {src24:'',loc:'',ntype:'',unreg:false,
+                                 sess:0,rules:0,review:0,allow:0,
+                                 apps:{},ports:{},provs:{}};
+    var sd = perIp[ip];
+    var ipam = r.ipam || {};
+    sd.src24 = sd.src24 || (r.src24||'');
+    sd.loc   = sd.loc   || (ipam.location||ipam.site||'');
+    sd.ntype = sd.ntype || (ipam.net_type||ipam.facility||'');
+    if(ipam.unregistered) sd.unreg = true;
+    sd.sess  += (hostSessions !== undefined ? hostSessions : (r.count||0));
+    sd.rules += 1;
+    if(r.action==='REVIEW') sd.review++;
+    if(r.action==='ALLOW')  sd.allow++;
+    (r.apps||[]).forEach(function(a){ if(a) sd.apps[a]=(sd.apps[a]||0)+(r.count||1); });
+    if(r.dest_port) sd.ports[r.dest_port]=(sd.ports[r.dest_port]||0)+(r.count||1);
+    var prov = getDest(r).provider||'';
+    if(prov) sd.provs[prov]=(sd.provs[prov]||0)+(r.count||1);
+  }
+
+  D.rules.forEach(function(r){
+    if(r.collapsed_n && r.collapsed_n > 1){
+      (r.collapsed_hosts||[]).forEach(function(h){
+        if(h.ip && !h.hostname) enrich(h.ip, r, h.count||0);
+      });
+    } else {
+      if(r.src_ip && !r.hostname) enrich(r.src_ip, r);
+    }
+  });
+
+  function topN(obj, n){
+    return Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,n).join('|');
+  }
+
+  Object.keys(perIp).sort(function(a,b){
+    return perIp[b].sess - perIp[a].sess;
+  }).forEach(function(ip){
+    var sd = perIp[ip];
+    var reg = sd.unreg ? 'No' : 'Yes';
+    var rec = sd.review>0 ? 'URGENT — REVIEW traffic; add to ent_host_master'
+            : sd.unreg    ? 'Register subnet in IPAM then add host to ent_host_master'
+            :               'Add to ent_host_master';
+    rows.push([ip, sd.src24, sd.loc, sd.ntype, reg,
+               sd.sess, sd.rules, sd.review, sd.allow,
+               topN(sd.apps,5), topN(sd.ports,5), topN(sd.provs,3), rec]);
+  });
+
+  if(rows.length <= 1){ alert('No unknown hosts found in this report.'); return; }
+
+  var csv = rows.map(function(r){
+    return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+  }).join('\r\n');
+
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'unknown_hosts.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function toggleLocType(tid){
+  var panel = document.getElementById(tid);
+  var arrow = document.getElementById('arr-'+tid);
+  if(!panel) return;
+  var open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  if(arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function toggleLocSite(sid){
+  var panel = document.getElementById('subs-'+sid);
+  var arrow = document.getElementById('sarr-'+sid);
+  if(!panel) return;
+  var open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  if(arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+// ── Flow Map ──────────────────────────────────────────────────────────────────
+var flowView  = 'sankey';
+var flowGroup = 'provider';
+var flowNodes = [], flowEdges = [];
+var selFlowNode = null;
+
+var PROV_COLORS = {
+  'Amazon Web Services': '#ff9900',
+  'Google':              '#4285f4',
+  'Microsoft Azure':     '#00a1f1',
+  'CrowdStrike':         '#e6223b',
+  'Unknown':             '#484f58',
+};
+
+var SC_COLORS = {
+  'DC-OWNED':  '#1f6feb', 'DC-COLO':   '#388bfd', 'CLOUD':    '#3fb950',
+  'RETAIL':    '#e3b341', 'DISTRO':    '#ffa657', 'SPECIALTY':'#ff9a6c',
+  'CORPORATE': '#a5a5f5', 'VPN':       '#39d353', 'UNKNOWN':  '#484f58',
+};
+
+function setFlowView(v, btn){
+  flowView=v;
+  document.querySelectorAll('#flow-controls .filter-pill').forEach(function(b){
+    if(['Sankey','Arc'].indexOf(b.textContent)>=0) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderFlowMap();
+}
+function setFlowGroup(g, btn){
+  flowGroup=g;
+  document.querySelectorAll('[data-fg]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderFlowMap();
+}
+
+function buildFlowData(){
+  if(!D||!D.rules) return;
+  var minSess = parseInt(document.getElementById('flow-min-sess').value)||1;
+  var edgeMap = {};   // 'srcLoc|||destNode' -> {sessions,rules,dest_ips,src_sc}
+
+  D.rules.forEach(function(r){
+    var ipam = r.ipam||{};
+    var dest = r.dest||{};
+    // Source node: location or site or site_class
+    var srcLoc = (ipam.location||'').trim() || (ipam.site||'').trim() || 'Unknown';
+    var srcSC  = (ipam.site_class||'UNKNOWN').trim();
+    // Dest node: depends on flowGroup
+    var destNode;
+    if(flowGroup==='provider'){
+      destNode = dest.provider&&dest.provider!=='Unknown' ? dest.provider : 'Unknown / Unclassified';
+    } else if(flowGroup==='region'){
+      destNode = dest.region ? (dest.provider||'?')+' / '+dest.region : (dest.provider||'Unknown')+' / No Region';
+    } else {
+      destNode = r.dest_ip;
+    }
+    var key = srcLoc+'|||'+destNode;
+    if(!edgeMap[key]) edgeMap[key]={sessions:0,rules:0,dest_ips:{},src_sc:srcSC,src_loc:srcLoc,dest_node:destNode};
+    edgeMap[key].sessions   += r.count;
+    edgeMap[key].rules      += 1;
+    edgeMap[key].dest_ips[r.dest_ip]=1;
+  });
+
+  // Filter by minSess
+  var edges=Object.values(edgeMap).filter(function(e){return e.sessions>=minSess;});
+
+  // Build node lists
+  var srcSet={}, dstSet={};
+  edges.forEach(function(e){
+    if(!srcSet[e.src_loc]) srcSet[e.src_loc]={label:e.src_loc,sc:e.src_sc,total:0,type:'src'};
+    srcSet[e.src_loc].total+=e.sessions;
+    if(!dstSet[e.dest_node]) dstSet[e.dest_node]={label:e.dest_node,total:0,type:'dst'};
+    dstSet[e.dest_node].total+=e.sessions;
+  });
+
+  flowNodes = Object.values(srcSet).sort(function(a,b){return b.total-a.total;})
+    .concat(Object.values(dstSet).sort(function(a,b){return b.total-a.total;}));
+  flowEdges = edges.sort(function(a,b){return b.sessions-a.sessions;});
+}
+
+function renderFlowMap(){
+  buildFlowData();
+  if(flowView==='sankey') drawSankey();
+  else drawArc();
+  buildFlowLegend();
+}
+
+// ── Sankey drawing ────────────────────────────────────────────────────────────
+function drawSankey(){
+  var cv=document.getElementById('flow-canvas');
+  var ctx=cv.getContext('2d');
+  var W=Math.max(300, cv.parentElement.clientWidth-300||600);
+  cv.style.width=W+'px'; // prevent CSS stretch scaling
+  var srcNodes=flowNodes.filter(function(n){return n.type==='src';});
+  var dstNodes=flowNodes.filter(function(n){return n.type==='dst';});
+  var ROW_H=22, PAD=4;
+  var H=Math.max(srcNodes.length,dstNodes.length)*ROW_H+80;
+  cv.width=W; cv.height=H;
+  cv.style.height=H+'px';
+  ctx.clearRect(0,0,W,H);
+
+  var COL1=4, COL2=W*0.38, COL3=W*0.62, COL4=W-4;
+  var LBL_W=COL2-COL1-8, RBL_W=COL4-COL3-8;
+
+  // Layout source nodes
+  var srcY={}, srcH={};
+  var totSrc=srcNodes.reduce(function(s,n){return s+n.total;},0)||1;
+  var availH=H-60;
+  var sy=30;
+  srcNodes.forEach(function(n,i){
+    var h=Math.max(ROW_H-PAD, Math.round((n.total/totSrc)*availH));
+    srcY[n.label]=sy; srcH[n.label]=h; sy+=h+PAD;
+  });
+
+  // Layout dest nodes
+  var dstY={}, dstH={};
+  var totDst=dstNodes.reduce(function(s,n){return s+n.total;},0)||1;
+  var dy=30;
+  dstNodes.forEach(function(n,i){
+    var h=Math.max(ROW_H-PAD, Math.round((n.total/totDst)*availH));
+    dstY[n.label]=dy; dstH[n.label]=h; dy+=h+PAD;
+  });
+
+  // Draw edges (bezier curves)
+  var srcOffset={}, dstOffset={};
+  srcNodes.forEach(function(n){srcOffset[n.label]=0;});
+  dstNodes.forEach(function(n){dstOffset[n.label]=0;});
+
+  flowEdges.forEach(function(e){
+    if(!srcY.hasOwnProperty(e.src_loc)||!dstY.hasOwnProperty(e.dest_node)) return;
+    var totS=srcNodes.find(function(n){return n.label===e.src_loc;});
+    var totD=dstNodes.find(function(n){return n.label===e.dest_node;});
+    if(!totS||!totD) return;
+
+    var sh=Math.max(1,Math.round(srcH[e.src_loc]*(e.sessions/totS.total)));
+    var dh=Math.max(1,Math.round(dstH[e.dest_node]*(e.sessions/totD.total)));
+    var x1=COL2, y1=srcY[e.src_loc]+srcOffset[e.src_loc];
+    var x2=COL3, y2=dstY[e.dest_node]+dstOffset[e.dest_node];
+
+    var prov=e.dest_node.split(' / ')[0];
+    var col=PROV_COLORS[prov]||'#484f58';
+    var alpha=Math.max(0.08, Math.min(0.45, e.sessions/2000));
+    ctx.strokeStyle=col; ctx.lineWidth=Math.max(1,sh); ctx.globalAlpha=alpha;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1+sh/2);
+    var mx=(x1+x2)/2;
+    ctx.bezierCurveTo(mx,y1+sh/2, mx,y2+dh/2, x2,y2+dh/2);
+    ctx.stroke();
+    ctx.globalAlpha=1;
+
+    srcOffset[e.src_loc]+=sh;
+    dstOffset[e.dest_node]+=dh;
+  });
+
+  // Draw source bars
+  srcNodes.forEach(function(n){
+    var col=SC_COLORS[n.sc]||'#484f58';
+    var y=srcY[n.label], h=srcH[n.label];
+    ctx.fillStyle=col; ctx.globalAlpha=selFlowNode===n.label?1:0.85;
+    ctx.fillRect(COL1,y,COL2-COL1-4,h);
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#e6edf3'; ctx.font='10px Segoe UI';
+    ctx.textBaseline='middle'; ctx.textAlign='left';
+    var lbl=n.label.length>28?n.label.substring(0,26)+'…':n.label;
+    ctx.fillText(lbl, COL1+4, y+h/2);
+    ctx.fillStyle='#4a9a8a'; ctx.textAlign='right';
+    ctx.fillText(fmtN(n.total), COL2-8, y+h/2);
+  });
+
+  // Draw dest bars
+  dstNodes.forEach(function(n){
+    var prov=n.label.split(' / ')[0];
+    var col=PROV_COLORS[prov]||'#484f58';
+    var y=dstY[n.label], h=dstH[n.label];
+    ctx.fillStyle=col; ctx.globalAlpha=selFlowNode===n.label?1:0.85;
+    ctx.fillRect(COL3,y,COL4-COL3,h);
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#e6edf3'; ctx.font='10px Segoe UI';
+    ctx.textBaseline='middle'; ctx.textAlign='left';
+    var lbl=n.label.length>26?n.label.substring(0,24)+'…':n.label;
+    ctx.fillText(lbl, COL3+4, y+h/2);
+    ctx.fillStyle='#4a9a8a'; ctx.textAlign='right'; ctx.font='9px Segoe UI';
+    ctx.fillText(fmtN(n.total), COL4-2, y+h/2);
+  });
+
+  // Column labels
+  ctx.fillStyle='#5a7a9a'; ctx.font='bold 10px Segoe UI'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('SOURCE LOCATION', (COL1+COL2)/2, 6);
+  ctx.fillText('DESTINATION', (COL3+COL4)/2, 6);
+
+  // Store layout for click detection
+  cv._srcY=srcY; cv._srcH=srcH; cv._dstY=dstY; cv._dstH=dstH;
+  cv._colBounds={COL1,COL2,COL3,COL4};
+}
+
+// ── Arc / chord drawing ───────────────────────────────────────────────────────
+function drawArc(){
+  var cv=document.getElementById('flow-canvas');
+  var ctx=cv.getContext('2d');
+  var W=Math.max(300, cv.parentElement.clientWidth-300||600);
+  var H=Math.min(W,600);
+  cv.width=W; cv.height=H;
+  cv.style.width=W+'px'; cv.style.height=H+'px'; // prevent CSS stretch scaling
+  ctx.clearRect(0,0,W,H);
+
+  var CX=W/2, CY=H/2, R=Math.min(W,H)/2-85;
+  var NODE_R=7; // hit radius
+
+  // All nodes arranged in a circle
+  var srcNodes=flowNodes.filter(function(n){return n.type==='src';}).slice(0,24);
+  var dstNodes=flowNodes.filter(function(n){return n.type==='dst';});
+  var allNodes=srcNodes.concat(dstNodes);
+  var total=allNodes.length||1;
+  var angleStep=(2*Math.PI)/total;
+
+  // Build position map and store on canvas for hit-testing
+  var arcNodePos={}; // label -> {x,y,type,sc}
+  allNodes.forEach(function(n,i){
+    var a=i*angleStep - Math.PI/2;
+    arcNodePos[n.label]={x:CX+R*Math.cos(a), y:CY+R*Math.sin(a), a:a, type:n.type, sc:n.sc||''};
+  });
+  cv._arcNodePos=arcNodePos;
+  cv._srcY=null; // clear sankey layout so click handler uses arc path
+
+  // Determine which edges involve the selected node (for highlight)
+  var selEdges={};
+  if(selFlowNode&&arcNodePos[selFlowNode]){
+    flowEdges.forEach(function(e){
+      if(e.src_loc===selFlowNode||e.dest_node===selFlowNode) selEdges[e.src_loc+'|||'+e.dest_node]=1;
+    });
+  }
+  var hasSel=Object.keys(selEdges).length>0;
+
+  // Draw arcs
+  flowEdges.slice(0,120).forEach(function(e){
+    var p1=arcNodePos[e.src_loc], p2=arcNodePos[e.dest_node];
+    if(!p1||!p2) return;
+    var prov=e.dest_node.split(' / ')[0];
+    var col=PROV_COLORS[prov]||'#484f58';
+    var key=e.src_loc+'|||'+e.dest_node;
+    var isSel=selEdges[key];
+    var alpha, lw;
+    if(hasSel){
+      alpha=isSel?Math.max(0.5,Math.min(0.9,e.sessions/1000)):0.04;
+      lw=isSel?Math.max(1.5,Math.min(5,Math.log(e.sessions+1)*0.8)):0.5;
+    } else {
+      alpha=Math.max(0.06,Math.min(0.35,e.sessions/3000));
+      lw=Math.max(0.5,Math.min(4,Math.log(e.sessions+1)*0.6));
+    }
+    ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.globalAlpha=alpha;
+    ctx.beginPath();
+    ctx.moveTo(p1.x,p1.y);
+    ctx.quadraticCurveTo(CX,CY,p2.x,p2.y);
+    ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+
+  // Draw nodes
+  allNodes.forEach(function(n){
+    var p=arcNodePos[n.label]; if(!p) return;
+    var col=n.type==='src'?(SC_COLORS[n.sc]||'#484f58'):(PROV_COLORS[n.label.split(' / ')[0]]||'#484f58');
+    var isSel=(selFlowNode===n.label);
+    var r=isSel?NODE_R+3:NODE_R;
+
+    // Glow ring on selected
+    if(isSel){
+      ctx.strokeStyle=col; ctx.lineWidth=2; ctx.globalAlpha=0.7;
+      ctx.beginPath(); ctx.arc(p.x,p.y,r+4,0,2*Math.PI); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    ctx.fillStyle=col;
+    ctx.globalAlpha=hasSel&&!isSel&&!selEdges[n.label+'|||*']?0.35:0.92;
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,2*Math.PI); ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Label
+    var lbl=n.label.length>20?n.label.substring(0,18)+'…':n.label;
+    var lx=CX+(R+NODE_R+8)*Math.cos(p.a), ly=CY+(R+NODE_R+8)*Math.sin(p.a);
+    ctx.fillStyle=isSel?'#ffffff':(hasSel?'#4a6a8a':'#a8c8e8');
+    ctx.font=(isSel?'bold ':'')+'9px Segoe UI';
+    ctx.textAlign=Math.cos(p.a)>0.1?'left':Math.cos(p.a)<-0.1?'right':'center';
+    ctx.textBaseline=Math.sin(p.a)>0.1?'top':Math.sin(p.a)<-0.1?'bottom':'middle';
+    ctx.fillText(lbl,lx,ly);
+  });
+}
+
+// ── Legend ────────────────────────────────────────────────────────────────────
+function buildFlowLegend(){
+  var html='<span style="color:#5a7a9a;font-weight:700;margin-right:4px">Src class:</span>';
+  Object.entries(SC_COLORS).forEach(function(e){
+    html+='<span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">'+
+          '<span style="width:10px;height:10px;border-radius:2px;background:'+e[1]+';display:inline-block"></span>'+
+          '<span>'+e[0]+'</span></span>';
+  });
+  html+='&ensp;<span style="color:#5a7a9a;font-weight:700;margin-right:4px">Dest:</span>';
+  Object.entries(PROV_COLORS).forEach(function(e){
+    html+='<span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">'+
+          '<span style="width:10px;height:10px;border-radius:2px;background:'+e[1]+';display:inline-block"></span>'+
+          '<span>'+e[0]+'</span></span>';
+  });
+  document.getElementById('flow-legend').innerHTML=html;
+}
+
+// ── Click handler — wired in DOMContentLoaded to guarantee element exists ──────
+function initFlowCanvas(){
+  var cv=document.getElementById('flow-canvas');
+  if(!cv) return;
+  // Delegated listener for "Sessions →" buttons in flow detail panel
+  var fd=document.getElementById('flow-detail');
+  if(fd){
+    fd.addEventListener('click',function(e){
+      var btn=e.target.closest('.flow-sess-btn');
+      if(!btn) return;
+      var srcLoc =btn.getAttribute('data-src');
+      var destNode=btn.getAttribute('data-dst');
+      showFlowSessions(srcLoc, destNode, srcLoc+' → '+destNode);
+    });
+  }
+
+  cv.addEventListener('click',function(e){
+    var rect=cv.getBoundingClientRect();
+    // Scale from CSS pixels to canvas pixel space (canvas may be CSS-stretched)
+    var scaleX = cv.width  / (rect.width  || cv.width);
+    var scaleY = cv.height / (rect.height || cv.height);
+    var mx=(e.clientX-rect.left)*scaleX, my=(e.clientY-rect.top)*scaleY;
+    var hit=null, hitType=null;
+
+    if(flowView==='chord' && cv._arcNodePos){
+      // Arc mode — hit-test against stored circle node positions
+      var SNAP=18; // click tolerance in px
+      var best=null, bestDist=SNAP*SNAP;
+      for(var lbl in cv._arcNodePos){
+        var p=cv._arcNodePos[lbl];
+        var dx=mx-p.x, dy=my-p.y, d2=dx*dx+dy*dy;
+        if(d2<bestDist){bestDist=d2;best={lbl:lbl,type:p.type};}
+      }
+      if(best){hit=best.lbl; hitType=best.type;}
+      selFlowNode=hit;
+      if(hit) showFlowDetail(hit, hitType);
+      else document.getElementById('flow-detail').innerHTML='<div style="color:#3a5a7a;font-size:11px">Click a node to see flow detail.</div>';
+      drawArc();
+    } else if(flowView==='sankey' && cv._srcY){
+      // Sankey mode — hit-test against bar rectangles
+      var b=cv._colBounds; if(!b) return;
+      if(mx>=b.COL1&&mx<=b.COL2){
+        for(var lbl in cv._srcY){
+          if(my>=cv._srcY[lbl]&&my<=cv._srcY[lbl]+cv._srcH[lbl]){hit=lbl;hitType='src';break;}
+        }
+      } else if(mx>=b.COL3&&mx<=b.COL4){
+        for(var lbl in cv._dstY){
+          if(my>=cv._dstY[lbl]&&my<=cv._dstY[lbl]+cv._dstH[lbl]){hit=lbl;hitType='dst';break;}
+        }
+      }
+      selFlowNode=hit;
+      if(hit) showFlowDetail(hit, hitType);
+      else document.getElementById('flow-detail').innerHTML='<div style="color:#3a5a7a;font-size:11px">Click a node to see flow detail.</div>';
+      drawSankey();
+    }
+  });
+}
+
+
+function showFlowSessions(srcLoc, destNode, title){
+  // Find the matching rules for this exact src location → dest node pair
+  showSessionModal('Sessions: '+title, function(r){
+    var ipam = r.ipam||{};
+    var dest = r.dest||{};
+    var rSrcLoc = (ipam.location||'').trim() || (ipam.site||'').trim() || 'Unknown';
+    var rDest;
+    if(flowGroup==='provider'){
+      rDest = dest.provider&&dest.provider!=='Unknown' ? dest.provider : 'Unknown / Unclassified';
+    } else if(flowGroup==='region'){
+      rDest = dest.region ? (dest.provider||'?')+' / '+dest.region : (dest.provider||'Unknown')+' / No Region';
+    } else {
+      rDest = r.dest_ip;
+    }
+    return rSrcLoc===srcLoc && rDest===destNode;
+  });
+}
+
+function showFlowDetail(label, type){
+  var panel=document.getElementById('flow-detail');
+  var edges=flowEdges.filter(function(e){
+    return type==='src'?e.src_loc===label:e.dest_node===label;
+  }).sort(function(a,b){return b.sessions-a.sessions;});
+
+  if(!edges.length){
+    // Node label might differ from what's in flowEdges — try a loose match
+    var lbl_lc=label.toLowerCase();
+    edges=flowEdges.filter(function(e){
+      return type==='src'?e.src_loc.toLowerCase()===lbl_lc:e.dest_node.toLowerCase()===lbl_lc;
+    });
+  }
+  if(!edges.length){
+    panel.innerHTML='<div style="color:#4a6a8a;font-size:11px">No flow data for <b>'+esc(label)+'</b>.<br>'+
+      '<span style="font-size:10px;color:#3a5a7a">This node may have been filtered by the min-sessions threshold. Try lowering the filter.</span></div>';
+    return;
+  }
+
+  var total=edges.reduce(function(s,e){return s+e.sessions;},0);
+  var rules =edges.reduce(function(s,e){return s+e.rules;},0);
+  var allIPs={}; edges.forEach(function(e){Object.assign(allIPs,e.dest_ips);});
+
+  var html='<div style="font-size:12px;font-weight:700;color:#e8f0f8;margin-bottom:4px">'+esc(label)+'</div>';
+  html+='<div style="font-size:10px;color:#6888a8;margin-bottom:10px">';
+  html+=fmtN(total)+' sessions &middot; '+rules+' rules';
+  if(type==='src') html+=' &middot; '+Object.keys(allIPs).length+' dest IPs';
+  html+='</div>';
+
+  edges.forEach(function(e){
+    var prov=type==='src'?e.dest_node:e.src_loc;
+    var col=PROV_COLORS[prov.split(' / ')[0]]||SC_COLORS[e.src_sc]||'#484f58';
+    var pct=Math.round(100*e.sessions/total);
+    html+='<div style="margin-bottom:8px">';
+    html+='<div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px">';
+    html+='<span style="color:#a8c8e8;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(prov)+'">'+esc(prov)+'</span>';
+    html+='<span style="color:#4a9a8a;font-family:\'Courier New\',monospace">'+fmtN(e.sessions)+'</span>';
+    html+='</div>';
+    html+='<div style="height:5px;background:#1a2a3a;border-radius:3px;overflow:hidden">';
+    html+='<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px"></div></div>';
+    // Drill-down: click to open session modal filtered to this src→dest pair
+    html+='<div style="display:flex;justify-content:space-between;font-size:9px;color:#3a5a7a;margin-top:2px">';
+    html+='<span>'+e.rules+' rules &middot; '+Object.keys(e.dest_ips).length+' IPs</span>';
+    html+='<button class="flow-sess-btn" '
+         +'data-src="'+esc(e.src_loc)+'" '
+         +'data-dst="'+esc(e.dest_node)+'" '
+         +'style="background:#0d2040;border:1px solid #1a4a6a;color:#4a9acf;font-size:9px;'
+         +'padding:1px 6px;border-radius:3px;cursor:pointer">Sessions →</button>';
+    html+='</div>';
+    html+='</div>';
+  });
+
+  panel.innerHTML=html;
+}
+
+// Wire flow map rendering when tab is activated
+// Done via a simple post-call in navTo itself (no risky override needed)
+var _flowMapReady = false;
+
+// ── Log Event Modal ──────────────────────────────────────────────────────────
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+
+function endClass(r){
+  if(!r)return 'end-aged';
+  if(r==='tcp-fin')return 'end-fin';
+  if(r.indexOf('rst')>=0)return 'end-rst';
+  return 'end-aged';
+}
+
+function showSessionModal(title, filterFn){
+  if(!D||!D.rules) return;
+  var matching = D.rules.filter(filterFn);
+  matching.sort(function(a,b){return b.count-a.count;});
+
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-sub').textContent =
+    matching.length + ' rule(s) — ' + matching.reduce(function(s,r){return s+r.count;},0) + ' total sessions';
+
+  if(!matching.length){
+    document.getElementById('modal-body').innerHTML='<div class="modal-empty">No matching sessions found.</div>';
+    document.getElementById('modal-overlay').classList.add('open');
+    return;
+  }
+
+  var html='<table class="log-table"><thead><tr>';
+  html+='<th>Action</th><th>Src IP</th><th>Src Hostname</th><th>Src Application</th>';
+  html+='<th>Dest IP</th><th>:Port / Service</th><th>Dest Provider</th>';
+  html+='<th>Sessions</th><th>Pkts Out</th><th>Pkts In</th><th>Close Reason</th>';
+  html+='</tr></thead><tbody>';
+
+  matching.forEach(function(r){
+    var end=(r.end_reasons||[])[0]||'';
+    var dest=r.dest||{};
+    var ipam=r.ipam||{};
+    var srcApp=r.src_app||(ipam.app_acronyms||'').split('|')[0].trim()||'';
+    var provStr=dest.provider&&dest.provider!=='Unknown'
+      ? dest.provider+(dest.service&&dest.service!==dest.provider?' / '+dest.service:'')
+      : '— unclassified';
+
+    html+='<tr>';
+    // Action
+    html+='<td><span class="lt-action ab-'+r.action+'">'+esc(r.action)+'</span></td>';
+    // Src IP
+    html+='<td class="lt-ip">'+esc(r.src_ip)+'</td>';
+    // Src Hostname
+    html+='<td class="lt-host" title="'+esc(r.hostname||'')+'">'+esc(r.hostname||'—')+'</td>';
+    // Src App
+    html+='<td class="lt-app-name" title="'+esc(srcApp)+'">'+esc(srcApp||'—')+'</td>';
+    // Dest IP
+    html+='<td class="lt-dest">'+esc(r.dest_ip)+'</td>';
+    // Port / Service
+    html+='<td><span style="font-family:\'Courier New\',monospace;color:#c8d8e8">:'+r.dest_port+'</span>';
+    if(r.svc&&r.svc!=='Port-'+r.dest_port) html+=' <span style="font-size:10px;color:#8aa8c8">'+esc(r.svc)+'</span>';
+    html+='</td>';
+    // Dest Provider
+    html+='<td class="lt-provider" title="'+esc(provStr)+'">'+esc(provStr)+'</td>';
+    // Sessions
+    html+='<td class="lt-pkts">'+fmt(r.count)+'</td>';
+    // Pkts out / in
+    html+='<td class="lt-pkts">'+fmt(r.pkts_out)+'</td>';
+    html+='<td class="lt-pkts">'+fmt(r.pkts_in)+'</td>';
+    // Close reason
+    html+='<td class="lt-end"><span class="'+endClass(end)+'">'+esc(end||'aged-out')+'</span></td>';
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+// Predefined filter functions for each finding type
+var FINDING_FILTERS = {
+  'pci':          function(r){ var p=r.ipam&&r.ipam.pci||''; return p.indexOf('PCI')>=0; },
+  'unknown':      function(r){ return !r.dest||r.dest.ds_class==='UNKNOWN'||r.dest.provider==='Unknown'; },
+  'unregistered': function(r){ return r.ipam&&r.ipam.unregistered===true; },
+  'review':   function(r){ return r.action==='REVIEW'; },
+  'block':    function(r){ return r.action==='BLOCK'; },
+  'monitor':  function(r){ return r.action==='MONITOR'; },
+  'allow':    function(r){ return r.action==='ALLOW'; },
+  'rst':      function(r){ return (r.end_reasons||[]).some(function(e){return e.indexOf('rst')>=0;}); },
+  'aged':     function(r){ return (r.end_reasons||[]).some(function(e){return e==='aged-out';}) && r.total_pkts>100; },
+  'cloud':    function(r){ return r.dest&&r.dest.ds_class!=='UNKNOWN'&&r.dest.provider!=='Unknown'; },
+  'all':      function(r){ return true; },
+};
+
+function showFindingSessions(filterKey, title){
+  var fn = FINDING_FILTERS[filterKey] || FINDING_FILTERS['all'];
+  showSessionModal(title, fn);
+}
+
+// Init
+decomp('D').then(function(data){
+  D=data;
+  // Hydrate rules with transparent ipam/dest getters so the rest of the
+  // template can keep using r.ipam / r.dest without caring about dedup.
+  // (rules_by_action contains integer indices into D.rules, not rule objects,
+  // so only D.rules needs hydration.)
+  if(D&&D.rules) hydrateRules(D.rules);
+  renderStats(D.stats);
+  renderFunnel(D.funnel, D.stats);
+  renderFindings(D.findings);
+  _initRulesDelegation();   // v2.0 — single click listener on the rules list
+  renderRules();
+  renderPorts(D.ports);
+  renderSrcIPs(D.src24);
+  renderDests(D.dests);
+  initFlowCanvas();
+});
+
+// ── RFC Violations table ───────────────────────────────────────────────────
+function renderRfcTable(){
+  var rfcData = D.rfc || [];
+  var tbody = document.getElementById('rfc-tbody');
+  var empty = document.getElementById('rfc-empty');
+  if(!rfcData.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  var html = '';
+  rfcData.forEach(function(v){
+    var tierColor = {PROBE:'#ff8800',LIGHT:'#3a6a8a',NORMAL:'#2a6a5a',ACTIVE:'#1a7a3a',BULK:'#0a6a7a'};
+    var tc = tierColor[v.tier] || '#3a5a7a';
+    html += '<tr style="border-bottom:1px solid #1a2a3a;background:#0d0a0a">'
+          + '<td style="padding:5px 10px;color:#ff9999;font-family:monospace">'+esc(v.src_ip)+'</td>'
+          + '<td style="padding:5px 10px;color:#8a9aaa">'+esc(v.src_zone)+'</td>'
+          + '<td style="padding:5px 10px;color:#ff6666;font-weight:700;font-family:monospace">'+esc(v.dst_ip)+'</td>'
+          + '<td style="padding:5px 10px;color:#8a9aaa">'+esc(v.dst_zone)+'</td>'
+          + '<td style="padding:5px 10px;color:#c8a870">'+esc(String(v.port))+'</td>'
+          + '<td style="padding:5px 10px;color:#7a9aba">'+esc(v.app||'—')+'</td>'
+          + '<td style="padding:5px 10px"><span style="background:#3a0a0a;color:#ff6666;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">'+esc(v.rfc||'?')+'</span></td>'
+          + '<td style="padding:5px 10px;color:#6a8a7a;font-size:10px">'+esc(v.desc||'')+'</td>'
+          + '<td style="padding:5px 10px"><span style="background:'+tc+';color:#fff;font-size:9px;padding:1px 5px;border-radius:3px">'+esc(v.tier||'?')+'</span></td>'
+          + '<td style="padding:5px 10px;text-align:right;color:#ff9999;font-weight:700">'+fmt(v.count)+'</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#8aaa88">'+fmt(v.pkts_out)+'</td>'
+          + '<td style="padding:5px 4px;text-align:right;color:#8a88aa">'+fmt(v.pkts_in)+'</td>'
+          + '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+// ── Optimized Policy table ─────────────────────────────────────────────────
+var _policyRendered = false;
+function renderPolicyTable(){
+  if(_policyRendered) return;
+  _policyRendered = true;
+  var policy = D.policy || [];
+  var host = document.getElementById('policy-host');
+  if(!policy.length){
+    host.innerHTML='<div style="padding:24px;text-align:center;color:#5a7a9a">No policy recommendations generated — requires ALLOW or REVIEW rules with per-host source IPs.</div>';
+    return;
+  }
+
+  // Build address object inventories for the summary header
+  var srcObjs = {}, dstObjs = {}, svcObjs = {}, srcGroups = {};
+  policy.forEach(function(p){
+    srcGroups[p.src_group] = 1;
+    dstObjs[p.dest_obj]   = 1;
+    var svcKey = 'SVC-' + (p.ports[0]||'any') + '-' + (p.pa_app||'any').toUpperCase().replace(/-/g,'').substr(0,10);
+    svcObjs[svcKey] = 1;
+    (p.src_hosts||[]).forEach(function(h){ if(h.obj) srcObjs[h.obj]=1; });
+  });
+
+  var summary = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">';
+  function stat(n,lbl,color){
+    return '<div style="background:#0d1526;border:1px solid #1a2a3a;border-radius:6px;padding:10px 16px;text-align:center">'
+      +'<div style="font-size:22px;font-weight:700;font-family:\'Courier New\',monospace;color:'+color+'">'+n+'</div>'
+      +'<div style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">'+lbl+'</div></div>';
+  }
+  summary += stat(policy.length,     'Security Rules',    '#4ab8f8');
+  var blockCount = policy.filter(function(p){ return p.action==='BLOCK'; }).length;
+  if(blockCount) summary += stat(blockCount, 'BLOCK Rules (RFC)', '#ff4444');
+  summary += stat(Object.keys(srcObjs).length,  'Host Addr Objects', '#79c0ff');
+  summary += stat(Object.keys(srcGroups).length,'Source Groups',     '#c8a8e8');
+  summary += stat(Object.keys(dstObjs).length,  'Dest Svc Objects',  '#44cc88');
+  summary += stat(Object.keys(svcObjs).length,  'Service Objects',   '#ffcc33');
+  summary += '</div>';
+
+  var html = '';
+  policy.forEach(function(p, idx){
+    var actColor = p.action==='ALLOW'  ? '#44cc44'
+                 : p.action==='REVIEW' ? '#ffaa33'
+                 : p.action==='BLOCK'  ? '#ff4444'
+                 : '#ff6644';
+    var isRfcBlock = p.is_rfc_block === true;
+
+    // Rule card
+    html += '<div style="background:#0d1a2e;border:1px solid '+(isRfcBlock?'#3a0a0a':'#1a2a3a')+';'
+          + (isRfcBlock?'border-left:3px solid #ff4444;':'')
+          + 'border-radius:6px;margin-bottom:8px;overflow:hidden">';
+
+    // ── Header row ──
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer" onclick="togglePolicy('+idx+')">';
+    html += '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:'+actColor+'22;color:'+actColor+';letter-spacing:.3px;flex-shrink:0">'+esc(p.action)+'</span>';
+    html += '<span style="font-family:\'Courier New\',monospace;font-size:11px;font-weight:700;color:#e8f0f8;flex:1">'+esc(p.rule_name)+'</span>';
+    html += '<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:#1a2a1a;color:#6ac878;flex-shrink:0">'+esc(p.pa_app)+'</span>';
+    if(p._pa_apps_all && p._pa_apps_all.length > 1){
+      html += '<span style="font-size:8px;color:#4a6a4a;margin-left:3px">+'+String(p._pa_apps_all.length-1)+' apps</span>';
+    }
+    html += '<span style="font-size:10px;color:#4a9a8a;font-family:\'Courier New\',monospace;flex-shrink:0">'+fmt(p.sessions)+' sess</span>';
+    html += '<span style="font-size:11px;color:#3a5a7a;flex-shrink:0" id="parr-'+idx+'">▶</span>';
+    html += '</div>';
+
+    // ── Quick-glance identity row ──
+    html += '<div style="display:flex;gap:0;padding:0 14px 8px;flex-wrap:wrap;border-top:1px solid #0f1e2e">';
+
+    // Source group
+    html += '<div style="padding:5px 14px 5px 0;border-right:1px solid #1a2a3a;margin-right:14px">';
+    html += '<div style="font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Src Group</div>';
+    html += '<div style="font-size:10px;color:#c8a8e8;font-family:\'Courier New\',monospace">'+esc(p.src_group)+'</div>';
+    html += '<div style="font-size:9px;color:#5a7a9a;margin-top:1px">'+esc(p.src_app)+' · '+esc(p.src_env)+' · '+esc(p.src_site.split(' - ').pop())+'</div>';
+    html += '</div>';
+
+    // Arrow
+    html += '<div style="padding:5px 10px;align-self:center;color:#4a6a8a;font-size:16px">→</div>';
+
+    // Dest object
+    html += '<div style="padding:5px 14px 5px 0;border-right:1px solid #1a2a3a;margin-right:14px">';
+    html += '<div style="font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Dest Object</div>';
+    html += '<div style="font-size:10px;font-family:\'Courier New\',monospace;color:'+(isRfcBlock?'#ff6644':'#44cc88')+'">'+esc(p.dest_obj)+'</div>';
+    html += '<div style="font-size:9px;color:#5a7a9a;margin-top:1px">'+esc(p.dest_provider)+(p.dest_svc_label?' · '+esc(p.dest_svc_label):'')+'</div>';
+    html += '</div>';
+
+    // Service
+    html += '<div style="padding:5px 14px 5px 0;border-right:1px solid #1a2a3a;margin-right:14px">';
+    html += '<div style="font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Service / Port</div>';
+    html += '<div style="font-size:10px;color:#c8a870;font-family:\'Courier New\',monospace">'+(isRfcBlock?'any (all ports)':esc(p.ports.join(', ')))+'</div>';
+    html += '<div style="font-size:9px;color:#5a7a9a;margin-top:1px">app-id: '+esc(p.pa_app)+'</div>';
+    html += '</div>';
+
+    // Host count — or RFC investigation note
+    html += '<div style="padding:5px 0">';
+    if(isRfcBlock){
+      html += '<div style="font-size:8px;color:#ff6644;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Investigation Required</div>';
+      html += '<div style="font-size:10px;color:#ff8833;font-weight:700">Route leak / NAT failure</div>';
+      html += '<div style="font-size:9px;color:#8a5a3a;margin-top:1px">'+((p.src_hosts||[]).length)+' src hosts · '+((p.dest_ips||[]).length)+' bogon dest IPs</div>';
+    } else {
+      html += '<div style="font-size:8px;color:#3a5a7a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Src Hosts (/32)</div>';
+      html += '<div style="font-size:10px;color:#79c0ff;font-weight:700">'+((p.src_hosts||[]).length)+' host objects</div>';
+      html += '<div style="font-size:9px;color:#5a7a9a;margin-top:1px">'+((p.dest_ips||[]).length)+' dest IPs</div>';
+    }
+    html += '</div>';
+
+    html += '</div>'; // end identity row
+
+    // ── Expanded body (hidden by default) ──
+    html += '<div id="pbody-'+idx+'" style="display:none;border-top:1px solid '+(isRfcBlock?'#3a0a0a':'#1a2a3a')+'">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px">';
+
+    // Left: PA rule spec
+    html += '<div>';
+    if(isRfcBlock){
+      html += '<div style="font-size:9px;color:#ff6644;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:8px">⛔ RFC Violation — Explicit BLOCK Required</div>';
+      html += '<div style="font-size:11px;color:#cc8833;background:#1a0a00;border:1px solid #3a1500;border-radius:4px;padding:10px;margin-bottom:10px;line-height:1.7">'
+             +'Private/bogon addresses ('+esc(p.rfc_class||'RFC1918')+') detected in outside zone. '
+             +'This indicates a <b>route leak</b>, <b>NAT failure</b>, or <b>misconfigured VPN split-tunnel</b>.<br><br>'
+             +'<b>Investigate:</b> Which firewall or router is forwarding RFC-private traffic to the outside zone? '
+             +'Check NAT rules, default routes, and VPN configurations on sources listed.<br><br>'
+             +'<b>Create PA address object:</b> <span style="font-family:\'Courier New\',monospace;color:#ff8833">'
+             +esc(p.dest_obj||'')+'</span>'
+             +(p.addr_ranges ? '<br><span style="font-size:9px;color:#886633">Ranges: '+esc(p.addr_ranges)+'</span>' : '')
+             +'</div>';
+    } else {
+      html += '<div style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:8px">PA Policy Rule (suggested)</div>';
+    }
+    html += '<div style="font-family:\'Courier New\',monospace;font-size:11px;background:#06101a;border:1px solid '+(isRfcBlock?'#3a0a0a':'#1a2a3a')+';border-radius:4px;padding:10px;line-height:1.8;white-space:pre">';
+    var portVal = isRfcBlock ? 'any'
+               : (p.dest_svc_type === 'MEDIA-NAT') ? 'any  # UDP hole-punching — dynamic ports'
+               : (p.ports && p.ports.length === 1 && p.ports[0]) ? p.ports[0]
+               : 'application-default';
+    var appVal  = isRfcBlock ? 'any' : esc(p.pa_app||'any');
+    var appComment = (p._pa_apps_all && p._pa_apps_all.length > 1)
+                   ? '  # also observed: '+esc(p._pa_apps_all.slice(1,4).join(', '))
+                       +(p._pa_apps_all.length > 4 ? ' +more' : '')
+                   : '';
+    html += '<span style="color:#5a9acf">policy-rule</span> {\n';
+    html += '  <span style="color:#5a9acf">name</span>            = <span style="color:#c8d8e8">"'+esc(p.rule_name)+'"</span>;\n';
+    html += '  <span style="color:#5a9acf">action</span>          = <span style="color:'+actColor+';font-weight:700">'+esc(p.action)+'</span>;\n';
+    html += '  <span style="color:#5a9acf">source-address</span>  = <span style="color:#c8a8e8">"'+esc(p.src_group)+'"</span>;  <span style="color:#3a5a7a"># '+((p.src_hosts||[]).length)+' affected hosts</span>\n';
+    html += '  <span style="color:#5a9acf">dest-address</span>    = <span style="color:'+(isRfcBlock?'#ff6644':'#44cc88')+'">"'+esc(p.dest_obj)+'"</span>;  <span style="color:#3a5a7a"># '+esc(p.rfc_class||p.dest_provider).substring(0,50)+' </span>\n';
+    html += '  <span style="color:#5a9acf">dest-port</span>       = <span style="color:#c8a870">'+portVal+'</span>;\n';
+    html += '  <span style="color:#5a9acf">application</span>     = <span style="color:#6ac878">"'+appVal+'"</span><span style="color:#3a5a7a">'+appComment+'</span>;\n';
+    html += '  <span style="color:#5a9acf">log-start</span>       = yes;\n';
+    html += '  <span style="color:#5a9acf">log-end</span>         = yes;\n';
+    if(isRfcBlock){
+      html += '  <span style="color:#5a9acf">log-setting</span>     = <span style="color:#c8a870">"security-alert"</span>;\n';
+    }
+    html += '}';
+    html += '</div>';
+    if(p.cpc_service) html += '<div style="margin-top:8px;font-size:10px;color:#44cc88">✓ CPC covered: '+esc(p.cpc_service)+'</div>';
+    html += '</div>'; // end left
+
+    // Right: Source host objects + Dest IPs
+    html += '<div>';
+
+    // Source host objects table
+    html += '<div style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:6px">Source Host Objects — '+esc(p.src_group)+'</div>';
+    html += '<div style="max-height:200px;overflow-y:auto;background:#06101a;border:1px solid #1a2a3a;border-radius:4px">';
+    (p.src_hosts||[]).slice(0,50).forEach(function(h){
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-bottom:1px solid #0f1e2e;font-size:10px">';
+      html += '<span style="font-family:\'Courier New\',monospace;color:#79c0ff;flex-shrink:0">'+esc(h.obj||'')+'</span>';
+      if(h.hostname) html += '<span style="color:#a8c8e8;font-size:9px">'+esc(h.hostname)+'</span>';
+      html += '</div>';
+    });
+    if((p.src_hosts||[]).length > 50){
+      html += '<div style="padding:4px 8px;font-size:9px;color:#4a6a7a">+'+String((p.src_hosts.length-50))+' more host objects</div>';
+    }
+    html += '</div>';
+
+    // Dest IPs (collapsed)
+    html += '<div style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-top:10px;margin-bottom:6px">Destination IPs — '+esc(p.dest_obj)+'</div>';
+    html += '<div style="font-family:\'Courier New\',monospace;font-size:10px;color:#5a9a5a;background:#06101a;border:1px solid #1a2a3a;border-radius:4px;padding:6px 8px;max-height:120px;overflow-y:auto">';
+    (p.dest_ips||[]).forEach(function(ip){ html += esc(ip)+'<br>'; });
+    html += '</div>';
+
+    html += '</div>'; // end right
+    html += '</div>'; // end grid
+    html += '</div>'; // end pbody
+
+    html += '</div>'; // end card
+  });
+
+  host.innerHTML = summary + html;
+}
+
+function togglePolicy(idx){
+  var body  = document.getElementById('pbody-'+idx);
+  var arrow = document.getElementById('parr-'+idx);
+  if(!body) return;
+  var open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if(arrow) arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+</script>
+
+<!-- ── Flow Map ── -->
+<div class="section" id="sec-flow">
+  <h2>🗺 Location → Destination Flow Map</h2>
+  <div id="flow-controls" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;color:#5a7a9a">View:</span>
+    <button class="filter-pill active" onclick="setFlowView('sankey',this)">Sankey</button>
+    <button class="filter-pill" onclick="setFlowView('chord',this)">Arc</button>
+    <span style="font-size:10px;color:#5a7a9a;margin-left:8px">Group by:</span>
+    <button class="filter-pill active" data-fg="provider" onclick="setFlowGroup('provider',this)">Provider</button>
+    <button class="filter-pill" data-fg="region" onclick="setFlowGroup('region',this)">Region</button>
+    <button class="filter-pill" data-fg="ip" onclick="setFlowGroup('ip',this)">Dest IP</button>
+    <span style="font-size:10px;color:#5a7a9a;margin-left:8px">Min sessions:</span>
+    <select id="flow-min-sess" onchange="renderFlowMap()" style="background:#0d1526;border:1px solid #1a2a3a;color:#c8d8e8;font-size:11px;padding:3px 6px;border-radius:4px">
+      <option value="1">All</option>
+      <option value="5">≥ 5</option>
+      <option value="20" selected>≥ 20</option>
+      <option value="100">≥ 100</option>
+      <option value="500">≥ 500</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:12px;min-height:0">
+    <div style="flex:1;min-width:0">
+      <canvas id="flow-canvas" style="width:100%;border:1px solid #1a2a3a;border-radius:6px;background:#08101c;display:block"></canvas>
+    </div>
+    <div id="flow-detail" style="width:280px;flex-shrink:0;background:#0d1526;border:1px solid #1a2a3a;border-radius:6px;padding:12px;font-size:11px;overflow-y:auto;max-height:600px">
+      <div style="color:#3a5a7a;font-size:11px">Click a source or destination node to see flow detail.</div>
+    </div>
+  </div>
+  <div id="flow-legend" style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;font-size:10px;color:#6888a8"></div>
+</div>
+
+<!-- ── RFC Violations ── -->
+<div class="section" id="sec-rfc">
+  <h2>⛔ RFC Address Space Violations</h2>
+  <p style="color:#8aa0c0;font-size:12px;margin-bottom:16px">
+    Sessions where the destination is RFC1918/bogon private address space but the traffic is destined for an outside/internet zone.
+    These represent route leaks, NAT failures, or spoofed packets — each requires immediate investigation.
+  </p>
+  <div id="rfc-table-wrap">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="background:#1a0a0a;color:#ff8888;text-align:left">
+          <th style="padding:6px 10px">Source IP</th>
+          <th style="padding:6px 10px">Src Zone</th>
+          <th style="padding:6px 10px">Dest IP</th>
+          <th style="padding:6px 10px">Dst Zone</th>
+          <th style="padding:6px 10px">Port</th>
+          <th style="padding:6px 10px">App</th>
+          <th style="padding:6px 10px">RFC</th>
+          <th style="padding:6px 10px">Description</th>
+          <th style="padding:6px 10px">Tier</th>
+          <th style="padding:6px 4px;text-align:right">Sessions</th>
+          <th style="padding:6px 4px;text-align:right">Pkts Out</th>
+          <th style="padding:6px 4px;text-align:right">Pkts In</th>
+        </tr>
+      </thead>
+      <tbody id="rfc-tbody"></tbody>
+    </table>
+    <div id="rfc-empty" style="display:none;color:#5a7a9a;padding:24px;text-align:center;font-size:13px">
+      ✅ No RFC address space violations detected in this log.
+    </div>
+  </div>
+</div>
+
+<!-- ── Optimized Policy ── -->
+<div class="section" id="sec-policy">
+  <h2>📐 App/Server Intent Policy — /32 Source-Based Rules</h2>
+  <p style="color:#8aa0c0;font-size:12px;margin-bottom:12px">
+    Each card = one proposed Palo Alto security rule derived from observed ALLOW/REVIEW traffic.
+    Source objects are individual <b>/32 host addresses</b> grouped into address groups by application × environment × site.
+    Destination objects are named by cloud provider + service type.
+    Validate against intended application connectivity before implementing.
+  </p>
+  <div id="policy-host"></div>
+</div>
+
+<!-- ── Log Event Modal ── -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div id="modal-box">
+    <div id="modal-head">
+      <div>
+        <div id="modal-title">Session Log Events</div>
+        <div id="modal-sub"></div>
+      </div>
+      <button id="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+</body>
+</html>
