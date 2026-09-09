@@ -1,0 +1,122 @@
+MWDC029/PDC029 - Draft #1 Review
+
+Please complete the following steps for the control(s) listed in the task title.
+
+Review the MWDC and PDC draft reports in Teams and confirm the following for your control(s):
+
+    Process language is accurate in section III of the report.
+    Control language is accurate in section IV of the report.
+    If any changes are identified from steps 1 or 2, please make edits directly within the report.
+    Reply to this request with either “Yes, edits were made.” or “No changes were needed.” in the comment field before submitting.
+
+A link to the MWDC and PDC draft report(s) within Teams can be found here:
+MWDC https://aetnao365.sharepoint.com/:w:/r/sites/HCBSOC2ReportTeam/Shared Documents/Sept 30 2026 HCB SOC2/09302026 MWDC SOC2 Report_Draft 1_Teams.docx?d=w6e2bff1713d846eaa80108eea28796eb&csf=1&web=1&e=3YZNyO&wdLOR=c5E863896-2574-4FD3-AA6F-7127EA5F58CE
+
+PDC https://aetnao365.sharepoint.com/:w:/r/sites/HCBSOC2ReportTeam/Shared Documents/Sept 30 2026 HCB SOC2/09302026 PDC SOC2 Report_Draft 1_Teams.docx?d=w2750cbfc7d30448c917d7e8355ba1a99&csf=1&web=1&e=XZp2NK
+
+Note 1: For easy navigation, you can search for the control reference/your name to find the locations in the report that need review.
+Note 2: Please refer to the attached file in the reference section below for guidance on editing within Teams.
+
+Audit-Board Task #90848
+
+MWDC-013.1 Follow-Up Request – IDS Coverage by Traffic Population
+
+Request
+
+MWDC-013.1 Follow-Up Request – IDS Coverage by Traffic Population
+Control Language: IDS devices are in place to monitor network to traffic from the internet into the DMZ, Business to Business partner networks, and Payment Card Industry (PCI). Alerts are sent to Splunk and reviewed by the Security Operations Center (SOC).
+
+Please provide evidence demonstrating the IDS technologies currently in place to monitor each in-scope traffic population.
+Specifically:
+
+    Palo Alto IDS Coverage
+    1a. Please provide screenshots, configurations, network diagrams, or other supporting documentation demonstrating that the Palo Alto IDS/IPS solution is monitoring:
+
+    Internet traffic
+    DMZ traffic
+    B2B partner network traffic
+    1b. Please make it clear exactly what the relevant Palo Alto devices, policies, zones, interfaces, virtual systems, or network segments responsible for monitoring each traffic population are please to make sure we have coverage over each target population the control language speaks to. If it is easier, please label the evidence for each screenshot.
+
+    PCI IDS Coverage
+    2a. Please provide evidence demonstrating that Cisco FMC and associated SNORT intrusion detection/prevention capabilities remain in place to monitor PCI traffic.
+    2b. Please provide screenshots of the applicable FMC configuration and associated SNORT policies/rules demonstrating IDS/IPS monitoring is enabled for PCI traffic.
+    2c. Please identify the PCI network segment(s) monitored and the corresponding FMC/SNORT configuration used to provide IDS coverage.
+
+    Traffic Population Mapping
+    3a. Ultimately, we are looking for you to please provide documentation that maps each of the following control-required traffic populations to the corresponding IDS technology:
+
+    Internet
+    DMZ
+    B2B Partner Networks
+    PCI
+    The documentation should clearly demonstrate how IDS monitoring is established for each population and identify the technology responsible for providing that monitoring.
+
+Auditboard Task #87337
+
+Request
+
+Please provide the below evidence related to IDS-IPS:
+
+    That an IDS-IPS is implemented at the network perimeter and key points within the network.
+    That an IDS-IPS has been implemented on the wireless side of the firewall.
+    That rules have been implemented to monitor traffic, detect attack attempts, and mitigate threats.
+    That the IDS-IPS engines, baselines, and signatures are updated on a regular basis.
+    That rules have been implemented to monitor system and network administrator activities.
+
+*To meet HITRUST recertification requirements, it is crucial to ensure that whenever evidence is exported for system configurations, technical databases, audit logs, HR reports, training and awareness records, or applications, etc., the corresponding query or script used to retrieve that evidence is also provided. This should include appropriate date and time stamps. Furthermore, if a screenshot is taken, it must include the relevant date and time stamp as well. Thank you for your attention to these important details.
+
+Note: Refer to the Completeness & Accuracy section below for evidence generation requirements.
+
+Archer Request
+
+Title:	2026 FTC Assessment - OBS #127 - Inaccurate and Incomplete Network Asset Inventory	 	Workflow Status:	
+	 
+ 	Show help for TypeType:	
+	 	Show help for Target Completion DateTarget Completion Date:	9/4/2026	 
+ 	Category:	
+	 	 	 
+ 	Show help for DescriptionDescription:	
+
+Observation Context:
+The  observation is based on applicable ISO standard requirements and corresponding to CVS Health control standards and/or policies. It represents a preliminary item requiring validation and disposition, not a final finding.
+
+Observation Derivation:
+Archer Evidence Review: Observation identified based on evidence submitted and reviewed in Archer.  Archer request information:
+
+DRL #2 & Archer Document ID #39235281 – (2026 FTC Assessment Preparation - IDS/IPS Inventory(On Prem/Non-Cloud) (DRL 2)) | Landin, Javier (Gary Francis)
+DRL #3 & Archer Document ID #39235354 – (2026 FTC Assessment Preparation - IDS/IPS Inventory(Azure) (DRL 3)) | Kuliqi, Blerim (Saul Mankes)
+DRL #6 & Archer Document ID #39254581 – (2026 FTC Assessment Preparation - Aetna & CVS Health Firewall Inventory (DRL 6)) | Parks, Bridgett (Al Sassoon)
+DRL #7 & Archer Document ID #39244182 – (2026 FTC Assessment Preparation - Network Device Inventory (DRL 7)) | Renner, Frederick (Al Sassoon)
+Observation:
+
+Per inspection of testing evidence, it was noted that a significant number of asset reselections were required due to inaccuracies in CVS Health network inventory. The recorded inventory did not accurately reflect the current state of network devices and assets, indicating gaps in asset tracking, maintenance, and validation processes.
+
+It was noted that several assets initially selected for testing were found to be decommissioned or incorrectly recorded, inventory records lacked completeness or accuracy, requiring repeated sampling efforts, and there appears to be insufficient governance over updates to the network asset inventory, including inadequate reconciliation or periodic validation procedures.
+
+Some of the noted reselections are included in attachment.
+
+
+
+Show help for Request SourceRequest Source:	
+	 	Show help for Document IDDocument ID:	39235281	 
+ 	Show help for TitleTitle:	2026 FTC Assessment Preparation - IDS/IPS Inventory(On Prem/Non-Cloud) (DRL 2)	 	Workflow Status:	
+	 
+ 	Show help for TypeType:	
+	 	Show help for Target Completion DateTarget Completion Date:	6/20/2025	 
+ 	Category:	
+	 	 	 
+ 	Show help for DescriptionDescription:	
+
+In preparation for the 2026 FTC Assessment, please provide the complete IDS/IPS Inventory.  The following fields should be included:
+
+ Device Name
+ Model
+ Brand
+ Division
+ Location
+
+ ***NOTE:  The IDS/IPS inventory should be run on the due date of this request as it needs to be the most current version.  Thank you.
+	 
+ 	Is this related to an application?:	
+	 
+ 	
